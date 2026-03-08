@@ -1,0 +1,35 @@
+{
+  "name": "@remitmd/mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for remit.md — enables any MCP-compatible AI agent to make and receive payments",
+  "type": "module",
+  "bin": {
+    "remitmd-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "test": "node \"--import=file:///C:/Users/jj/remit/packages/sdk-typescript/node_modules/tsx/dist/esm/index.cjs\" --test tests/*.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@remitmd/sdk": "workspace:*",
+    "viem": "^2.0.0",
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "eslint": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "tsx": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "MIT"
+}
