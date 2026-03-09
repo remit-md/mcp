@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@remitmd/sdk": "workspace:*",
+    "@remitmd/sdk": "*",
     "viem": "^2.0.0",
     "zod": "^3.0.0"
   },
