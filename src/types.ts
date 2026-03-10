@@ -95,14 +95,6 @@ export interface Dispute {
   createdAt: number;
 }
 
-export interface Subscription {
-  subscriptionId: string;
-  to: string;
-  amount: number;
-  interval: string;
-  status: string;
-}
-
 export interface RemitEvent {
   type: string;
   timestamp: number;
@@ -123,13 +115,6 @@ export interface OpenStreamOptions {
   rate: number;
   maxDuration?: number;
   maxTotal?: number;
-}
-
-export interface SubscribeOptions {
-  to: string;
-  amount: number;
-  interval?: "daily" | "weekly" | "monthly" | "yearly";
-  maxPeriods?: number;
 }
 
 export interface PostBountyOptions {
@@ -169,8 +154,6 @@ export interface WalletLike {
   closeTab(tabId: string): Promise<Transaction>;
   openStream(options: OpenStreamOptions): Promise<Stream>;
   closeStream(streamId: string): Promise<Transaction>;
-  subscribe(options: SubscribeOptions): Promise<Subscription>;
-  cancelSubscription(subscriptionId: string): Promise<Transaction>;
   postBounty(options: PostBountyOptions): Promise<Bounty>;
   awardBounty(bountyId: string, winner: string): Promise<Transaction>;
   placeDeposit(options: PlaceDepositOptions): Promise<Deposit>;

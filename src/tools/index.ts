@@ -1,7 +1,6 @@
 import { paymentTools } from "./payments.js";
 import { tabTools } from "./tabs.js";
 import { streamTools } from "./streams.js";
-import { subscriptionTools } from "./subscriptions.js";
 import { bountyTools } from "./bounties.js";
 import { depositTools } from "./deposits.js";
 import { disputeTools } from "./disputes.js";
@@ -12,7 +11,6 @@ export const ALL_TOOLS: Tool[] = [
   ...paymentTools,
   ...tabTools,
   ...streamTools,
-  ...subscriptionTools,
   ...bountyTools,
   ...depositTools,
   ...disputeTools,

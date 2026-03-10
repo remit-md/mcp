@@ -10,7 +10,6 @@ import type {
   Bounty,
   Deposit,
   Dispute,
-  Subscription,
   Escrow,
   Reputation,
   RemitEvent,
@@ -46,9 +45,6 @@ function makeMock(): WalletLike {
         startedAt: 1_000_000,
       } as Stream),
     closeStream: async () => TX,
-    subscribe: async () =>
-      ({ subscriptionId: "sub-1", to: OTHER, amount: 10, interval: "monthly", status: "active" } as Subscription),
-    cancelSubscription: async () => TX,
     postBounty: async () =>
       ({ bountyId: "bounty-1", task: "test", amount: 50, status: "open", deadline: 9_999_999 } as Bounty),
     awardBounty: async () => TX,
@@ -99,8 +95,8 @@ function makeMock(): WalletLike {
 // ─── Schema tests ─────────────────────────────────────────────────────────────
 
 describe("tool registry", () => {
-  it("has exactly 15 tools", () => {
-    assert.equal(ALL_TOOLS.length, 15);
+  it("has exactly 13 tools", () => {
+    assert.equal(ALL_TOOLS.length, 13);
   });
 
   it("all tool names are unique", () => {
@@ -117,8 +113,6 @@ describe("tool registry", () => {
       "close_tab",
       "open_stream",
       "close_stream",
-      "create_subscription",
-      "cancel_subscription",
       "post_bounty",
       "award_bounty",
       "place_deposit",
@@ -246,25 +240,6 @@ describe("open_stream handler", () => {
 describe("close_stream handler", () => {
   it("returns txHash", async () => {
     const result = await callTool("close_stream", { stream_id: "stream-1" }, makeMock()) as Record<string, unknown>;
-    assert.equal(result["success"], true);
-  });
-});
-
-describe("create_subscription handler", () => {
-  it("returns subscriptionId", async () => {
-    const result = await callTool(
-      "create_subscription",
-      { to: OTHER, amount: 10, interval: "monthly" },
-      makeMock(),
-    ) as Record<string, unknown>;
-    assert.equal(result["success"], true);
-    assert.equal(result["subscriptionId"], "sub-1");
-  });
-});
-
-describe("cancel_subscription handler", () => {
-  it("returns txHash", async () => {
-    const result = await callTool("cancel_subscription", { subscription_id: "sub-1" }, makeMock()) as Record<string, unknown>;
     assert.equal(result["success"], true);
   });
 });

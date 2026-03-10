@@ -10,13 +10,13 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
-    "test": "node \"--import=file:///C:/Users/jj/remit/packages/sdk-typescript/node_modules/tsx/dist/esm/index.cjs\" --test tests/*.ts",
+    "test": "node --import=./node_modules/tsx/dist/esm/index.cjs --test tests/*.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@remitmd/sdk": "*",
+    "@remitmd/sdk": "file:../sdk/typescript",
     "viem": "^2.0.0",
     "zod": "^3.0.0"
   },

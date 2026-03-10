@@ -10,7 +10,6 @@ import type {
   Bounty,
   Deposit,
   Dispute,
-  Subscription,
   Escrow,
   Reputation,
   RemitEvent,
@@ -33,8 +32,6 @@ function makeMock(): WalletLike {
     closeTab: async () => TX,
     openStream: async () => ({ streamId: "s1", to: OTHER, rate: 0.001, maxDuration: 3600, totalStreamed: 1.5, status: "active", startedAt: 1_000_000 } as Stream),
     closeStream: async () => TX,
-    subscribe: async () => ({ subscriptionId: "sub1", to: OTHER, amount: 5, interval: "monthly", status: "active" } as Subscription),
-    cancelSubscription: async () => TX,
     postBounty: async () => ({ bountyId: "b1", task: "test", amount: 20, status: "open", deadline: 9_999_999 } as Bounty),
     awardBounty: async () => TX,
     placeDeposit: async () => ({ depositId: "d1", to: OTHER, amount: 10, status: "locked", expiresAt: 9_999_999 } as Deposit),
@@ -67,11 +64,11 @@ describe("listResources", () => {
     }
   });
 
-  it("URI templates use {address} or {id} placeholders", () => {
+  it("URI templates use {address} or {id} template variables", () => {
     for (const r of listResources()) {
       assert.ok(
         r.uri.includes("{address}") || r.uri.includes("{id}"),
-        `No placeholder in URI: ${r.uri}`,
+        `No template variable in URI: ${r.uri}`,
       );
     }
   });
