@@ -15,7 +15,7 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/remit-md/sdk.git ../sdk
           cd ../sdk/typescript
-          npm install
+          npm install --legacy-peer-deps
           npm run build
 
       - name: Setup Node.js
