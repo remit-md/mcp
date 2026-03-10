@@ -11,8 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Checkout SDK (local dependency)
-        run: git clone --depth 1 https://github.com/remit-md/sdk.git ../sdk
+      - name: Checkout and build SDK (local dependency)
+        run: |
+          git clone --depth 1 https://github.com/remit-md/sdk.git ../sdk
+          cd ../sdk/typescript
+          npm install
+          npm run build
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
