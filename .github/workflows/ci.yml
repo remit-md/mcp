@@ -12,10 +12,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Checkout SDK (local dependency)
-        uses: actions/checkout@v4
-        with:
-          repository: remit-md/sdk
-          path: ../sdk
+        run: git clone --depth 1 https://github.com/remit-md/sdk.git ../sdk
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
