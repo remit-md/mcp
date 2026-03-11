@@ -171,6 +171,44 @@ export interface WalletLike {
   getEvents(wallet: string, since?: number): Promise<RemitEvent[]>;
 }
 
+// ─── WalletLike runtime type guard ───────────────────────────────────────────
+
+const WALLET_LIKE_METHODS: ReadonlyArray<keyof WalletLike> = [
+  "payDirect",
+  "pay",
+  "claimStart",
+  "releaseEscrow",
+  "cancelEscrow",
+  "openTab",
+  "closeTab",
+  "openStream",
+  "closeStream",
+  "postBounty",
+  "awardBounty",
+  "placeDeposit",
+  "fileDispute",
+  "balance",
+  "status",
+  "getStatus",
+  "getInvoice",
+  "getEscrow",
+  "getTab",
+  "getBounty",
+  "getReputation",
+  "getEvents",
+];
+
+/**
+ * Runtime type guard: checks that the object structurally satisfies WalletLike.
+ * Use instead of `as unknown as WalletLike` when wrapping SDK wallet objects.
+ */
+export function isWalletLike(value: unknown): value is WalletLike {
+  if (typeof value !== "object" || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  if (typeof obj["address"] !== "string") return false;
+  return WALLET_LIKE_METHODS.every((m) => typeof obj[m] === "function");
+}
+
 // ─── Tool Infrastructure ──────────────────────────────────────────────────────
 
 export interface JsonSchemaProperty {
