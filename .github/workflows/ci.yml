@@ -33,5 +33,5 @@ jobs:
       - name: Lint
         run: npx eslint .
 
-      - name: Test
-        run: npm test
+      - name: Test with coverage gate
+        run: npm run test:coverage
