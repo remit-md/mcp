@@ -23,8 +23,8 @@ Any AI agent with MCP support can pay for services, manage escrows, stream funds
 
 ## Capabilities
 
-**15 Tools:**
-Direct payments, escrow (create/release/dispute), tabs (open/close/sign vouchers), streams (create/withdraw/close), subscriptions, bounties (post/submit/award), deposits (lock/return), disputes, status checks.
+**13 Tools:**
+Direct payments, escrow (create/release), tabs (open/close), streams (open/close), bounties (post/award), deposits (lock), disputes, status checks.
 
 **7 Resources:**
 Wallet balance, reputation score, transaction history, escrow details, tab details, stream details, protocol status.
