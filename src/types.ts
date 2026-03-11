@@ -144,6 +144,9 @@ export interface WalletLike {
   balance(): Promise<number>;
   status(): Promise<WalletStatus>;
 
+  // x402 micropayment fetch
+  x402Fetch(url: string, maxAutoPayUsdc?: number, init?: RequestInit): Promise<Response>;
+
   // Read operations (needed for resources + status tools)
   getStatus(wallet: string): Promise<WalletStatus>;
   getInvoice(invoiceId: string): Promise<Invoice>;
@@ -171,6 +174,7 @@ const WALLET_LIKE_METHODS: ReadonlyArray<keyof WalletLike> = [
   "placeDeposit",
   "balance",
   "status",
+  "x402Fetch",
   "getStatus",
   "getInvoice",
   "getEscrow",

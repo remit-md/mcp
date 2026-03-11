@@ -80,14 +80,15 @@ function makeMock(): WalletLike {
     getReputation: async (addr) =>
       ({ address: addr, score: 92, completedPayments: 150, tier: "premium" } as Reputation),
     getEvents: async () => [] as RemitEvent[],
+    x402Fetch: async () => new Response('{"data":"paid"}', { status: 200 }),
   };
 }
 
 // ─── Schema tests ─────────────────────────────────────────────────────────────
 
 describe("tool registry", () => {
-  it("has exactly 12 tools", () => {
-    assert.equal(ALL_TOOLS.length, 12);
+  it("has exactly 14 tools", () => {
+    assert.equal(ALL_TOOLS.length, 14);
   });
 
   it("all tool names are unique", () => {
@@ -109,6 +110,8 @@ describe("tool registry", () => {
       "place_deposit",
       "check_balance",
       "get_status",
+      "x402_pay",
+      "x402_config",
     ];
     for (const name of expected) {
       assert.ok(toolRegistry.has(name), `Missing tool: ${name}`);
@@ -313,6 +316,94 @@ describe("error handling", () => {
     await assert.rejects(
       () => callTool("pay_direct", { to: OTHER, amount: 9999 }, mock),
       /InsufficientBalance/,
+    );
+  });
+});
+
+// ─── x402_config handler ─────────────────────────────────────────────────────
+
+describe("x402_config handler", () => {
+  it("returns current config with defaults", async () => {
+    // Reset to defaults first
+    await callTool("x402_config", { max_auto_pay_usdc: 0.10, enabled: true }, makeMock());
+    const result = await callTool("x402_config", {}, makeMock()) as Record<string, unknown>;
+    assert.equal(result["success"], true);
+    const config = result["config"] as Record<string, unknown>;
+    assert.equal(config["enabled"], true);
+    assert.equal(config["maxAutoPayUsdc"], 0.10);
+  });
+
+  it("updates maxAutoPayUsdc", async () => {
+    const result = await callTool("x402_config", { max_auto_pay_usdc: 0.05 }, makeMock()) as Record<string, unknown>;
+    const config = result["config"] as Record<string, unknown>;
+    assert.equal(config["maxAutoPayUsdc"], 0.05);
+    // Reset
+    await callTool("x402_config", { max_auto_pay_usdc: 0.10 }, makeMock());
+  });
+
+  it("can disable and re-enable auto-pay", async () => {
+    let result = await callTool("x402_config", { enabled: false }, makeMock()) as Record<string, unknown>;
+    assert.equal((result["config"] as Record<string, unknown>)["enabled"], false);
+    result = await callTool("x402_config", { enabled: true }, makeMock()) as Record<string, unknown>;
+    assert.equal((result["config"] as Record<string, unknown>)["enabled"], true);
+  });
+});
+
+// ─── x402_pay handler ────────────────────────────────────────────────────────
+
+describe("x402_pay handler", () => {
+  it("calls wallet.x402Fetch with url and session limit", async () => {
+    await callTool("x402_config", { enabled: true, max_auto_pay_usdc: 0.10 }, makeMock());
+    const mock = makeMock();
+    let capturedUrl: string | undefined;
+    let capturedLimit: number | undefined;
+    mock.x402Fetch = async (url, limit) => {
+      capturedUrl = url;
+      capturedLimit = limit;
+      return new Response('{"ok":true}', { status: 200 });
+    };
+    const result = await callTool("x402_pay", { url: "https://example.com/resource" }, mock) as Record<string, unknown>;
+    assert.equal(result["status"], 200);
+    assert.equal(result["ok"], true);
+    assert.equal(capturedUrl, "https://example.com/resource");
+    assert.equal(capturedLimit, 0.10);
+  });
+
+  it("uses per-request max_usdc when provided", async () => {
+    await callTool("x402_config", { enabled: true, max_auto_pay_usdc: 0.10 }, makeMock());
+    const mock = makeMock();
+    let capturedLimit: number | undefined;
+    mock.x402Fetch = async (_url, limit) => {
+      capturedLimit = limit;
+      return new Response("data", { status: 200 });
+    };
+    await callTool("x402_pay", { url: "https://example.com/resource", max_usdc: 0.50 }, mock);
+    assert.equal(capturedLimit, 0.50);
+  });
+
+  it("returns body text from response", async () => {
+    await callTool("x402_config", { enabled: true }, makeMock());
+    const mock = makeMock();
+    mock.x402Fetch = async () => new Response('{"result":"success"}', { status: 200 });
+    const result = await callTool("x402_pay", { url: "https://example.com/resource" }, mock) as Record<string, unknown>;
+    assert.equal(result["body"], '{"result":"success"}');
+  });
+
+  it("throws McpError when auto-pay is disabled", async () => {
+    await callTool("x402_config", { enabled: false }, makeMock());
+    await assert.rejects(
+      () => callTool("x402_pay", { url: "https://example.com/resource" }, makeMock()),
+      /disabled/,
+    );
+    // Re-enable for subsequent tests
+    await callTool("x402_config", { enabled: true }, makeMock());
+  });
+
+  it("rejects invalid URL", async () => {
+    await callTool("x402_config", { enabled: true }, makeMock());
+    await assert.rejects(
+      () => callTool("x402_pay", { url: "not-a-url" }, makeMock()),
+      /InvalidParams|url/i,
     );
   });
 });

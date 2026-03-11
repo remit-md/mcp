@@ -94,4 +94,14 @@ export const PlaceDepositArgs = z.object({
   expires: positiveInt,
 });
 
+export const X402PayArgs = z.object({
+  url: z.string().url("must be a valid URL"),
+  max_usdc: positiveNumber.optional(),
+});
+
+export const X402ConfigArgs = z.object({
+  max_auto_pay_usdc: positiveNumber.optional(),
+  enabled: z.boolean().optional(),
+});
+
 // check_balance and get_status take no args — no schema needed.

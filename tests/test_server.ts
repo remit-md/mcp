@@ -74,6 +74,7 @@ function makeMockWallet(): WalletLike {
     getBounty: async () => ({ bountyId: "bounty-1", task: "test", amount: 50, status: "open", deadline: 9_999_999 } as Bounty),
     getReputation: async () => ({ address: OTHER, score: 90, completedPayments: 10, disputes: 0, tier: "standard" } as Reputation),
     getEvents: async () => [] as RemitEvent[],
+    x402Fetch: async () => new Response('OK', { status: 200 }),
   };
 }
 
@@ -92,6 +93,8 @@ const EXPECTED_TOOL_NAMES = [
   "place_deposit",
   "check_balance",
   "get_status",
+  "x402_pay",
+  "x402_config",
 ];
 
 // ── Test suite ────────────────────────────────────────────────────────────────
@@ -118,7 +121,7 @@ describe("MCP server — protocol level", () => {
 
   // ── tools/list ────────────────────────────────────────────────────────────
 
-  it("tools/list returns all 13 registered tools", async () => {
+  it("tools/list returns all 14 registered tools", async () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name);
     assert.equal(tools.length, EXPECTED_TOOL_NAMES.length, `Expected ${EXPECTED_TOOL_NAMES.length} tools, got ${tools.length}: ${names.join(", ")}`);
