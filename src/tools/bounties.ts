@@ -1,4 +1,5 @@
 import type { Tool } from "../types.js";
+import { parseInput, PostBountyArgs, AwardBountyArgs } from "./validate.js";
 
 export const postBountyTool: Tool = {
   definition: {
@@ -25,13 +26,8 @@ export const postBountyTool: Tool = {
     },
   },
   handler: async (args, wallet) => {
-    const bounty = await wallet.postBounty({
-      amount: args["amount"] as number,
-      task: args["task"] as string,
-      deadline: args["deadline"] as number,
-      validation: args["validation"] as "poster" | "oracle" | "multisig" | undefined,
-      maxAttempts: args["max_attempts"] as number | undefined,
-    });
+    const { amount, task, deadline, validation, max_attempts } = parseInput(PostBountyArgs, args);
+    const bounty = await wallet.postBounty({ amount, task, deadline, validation, maxAttempts: max_attempts });
     return { success: true, bountyId: bounty.bountyId, status: bounty.status };
   },
 };
@@ -50,10 +46,8 @@ export const awardBountyTool: Tool = {
     },
   },
   handler: async (args, wallet) => {
-    const tx = await wallet.awardBounty(
-      args["bounty_id"] as string,
-      args["winner"] as string,
-    );
+    const { bounty_id, winner } = parseInput(AwardBountyArgs, args);
+    const tx = await wallet.awardBounty(bounty_id, winner);
     return { success: true, txHash: tx.txHash, status: tx.status };
   },
 };

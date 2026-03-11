@@ -1,4 +1,10 @@
 import type { Tool } from "../types.js";
+import {
+  parseInput,
+  PayDirectArgs,
+  CreateEscrowArgs,
+  ReleaseEscrowArgs,
+} from "./validate.js";
 
 export const payDirectTool: Tool = {
   definition: {
@@ -16,10 +22,8 @@ export const payDirectTool: Tool = {
     },
   },
   handler: async (args, wallet) => {
-    const to = args["to"] as string;
-    const amount = args["amount"] as number;
-    const memo = (args["memo"] as string | undefined) ?? "";
-    const tx = await wallet.payDirect(to, amount, memo);
+    const { to, amount, memo } = parseInput(PayDirectArgs, args);
+    const tx = await wallet.payDirect(to, amount, memo ?? "");
     return { success: true, txHash: tx.txHash, status: tx.status };
   },
 };
@@ -56,13 +60,7 @@ export const createEscrowTool: Tool = {
     },
   },
   handler: async (args, wallet) => {
-    const to = args["to"] as string;
-    const amount = args["amount"] as number;
-    const task = args["task"] as string;
-    const timeout = args["timeout"] as number;
-    const milestones = args["milestones"] as
-      | Array<{ amount: number; description: string }>
-      | undefined;
+    const { to, amount, task, timeout, milestones } = parseInput(CreateEscrowArgs, args);
     const tx = await wallet.pay({ to, amount, type: "escrow", memo: task, timeout, milestones });
     return { success: true, invoiceId: tx.invoiceId, txHash: tx.txHash, status: tx.status };
   },
@@ -81,8 +79,8 @@ export const releaseEscrowTool: Tool = {
     },
   },
   handler: async (args, wallet) => {
-    const invoiceId = args["invoice_id"] as string;
-    const tx = await wallet.releaseEscrow(invoiceId);
+    const { invoice_id } = parseInput(ReleaseEscrowArgs, args);
+    const tx = await wallet.releaseEscrow(invoice_id);
     return { success: true, txHash: tx.txHash, status: tx.status };
   },
 };

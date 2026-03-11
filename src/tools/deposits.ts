@@ -1,4 +1,5 @@
 import type { Tool } from "../types.js";
+import { parseInput, PlaceDepositArgs } from "./validate.js";
 
 export const placeDepositTool: Tool = {
   definition: {
@@ -19,11 +20,8 @@ export const placeDepositTool: Tool = {
     },
   },
   handler: async (args, wallet) => {
-    const deposit = await wallet.placeDeposit({
-      to: args["to"] as string,
-      amount: args["amount"] as number,
-      expires: args["expires"] as number,
-    });
+    const { to, amount, expires } = parseInput(PlaceDepositArgs, args);
+    const deposit = await wallet.placeDeposit({ to, amount, expires });
     return { success: true, depositId: deposit.depositId, status: deposit.status };
   },
 };

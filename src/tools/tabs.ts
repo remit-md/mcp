@@ -1,4 +1,5 @@
 import type { Tool } from "../types.js";
+import { parseInput, OpenTabArgs, CloseTabArgs } from "./validate.js";
 
 export const openTabTool: Tool = {
   definition: {
@@ -20,12 +21,8 @@ export const openTabTool: Tool = {
     },
   },
   handler: async (args, wallet) => {
-    const tab = await wallet.openTab({
-      to: args["to"] as string,
-      limit: args["limit"] as number,
-      perUnit: args["per_unit"] as number,
-      expires: args["expires"] as number | undefined,
-    });
+    const { to, limit, per_unit, expires } = parseInput(OpenTabArgs, args);
+    const tab = await wallet.openTab({ to, limit, perUnit: per_unit, expires });
     return {
       success: true,
       tabId: tab.tabId,
@@ -49,7 +46,8 @@ export const closeTabTool: Tool = {
     },
   },
   handler: async (args, wallet) => {
-    const tx = await wallet.closeTab(args["tab_id"] as string);
+    const { tab_id } = parseInput(CloseTabArgs, args);
+    const tx = await wallet.closeTab(tab_id);
     return { success: true, txHash: tx.txHash, status: tx.status };
   },
 };

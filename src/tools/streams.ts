@@ -1,4 +1,5 @@
 import type { Tool } from "../types.js";
+import { parseInput, OpenStreamArgs, CloseStreamArgs } from "./validate.js";
 
 export const openStreamTool: Tool = {
   definition: {
@@ -20,12 +21,8 @@ export const openStreamTool: Tool = {
     },
   },
   handler: async (args, wallet) => {
-    const stream = await wallet.openStream({
-      to: args["to"] as string,
-      rate: args["rate"] as number,
-      maxDuration: args["max_duration"] as number | undefined,
-      maxTotal: args["max_total"] as number | undefined,
-    });
+    const { to, rate, max_duration, max_total } = parseInput(OpenStreamArgs, args);
+    const stream = await wallet.openStream({ to, rate, maxDuration: max_duration, maxTotal: max_total });
     return {
       success: true,
       streamId: stream.streamId,
@@ -48,7 +45,8 @@ export const closeStreamTool: Tool = {
     },
   },
   handler: async (args, wallet) => {
-    const tx = await wallet.closeStream(args["stream_id"] as string);
+    const { stream_id } = parseInput(CloseStreamArgs, args);
+    const tx = await wallet.closeStream(stream_id);
     return { success: true, txHash: tx.txHash, status: tx.status };
   },
 };

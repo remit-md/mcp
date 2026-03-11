@@ -1,4 +1,5 @@
 import type { Tool } from "../types.js";
+import { parseInput, FileDisputeArgs } from "./validate.js";
 
 export const fileDisputeTool: Tool = {
   definition: {
@@ -30,12 +31,8 @@ export const fileDisputeTool: Tool = {
     },
   },
   handler: async (args, wallet) => {
-    const dispute = await wallet.fileDispute({
-      invoiceId: args["invoice_id"] as string,
-      reason: args["reason"] as string,
-      details: args["details"] as string,
-      evidenceUri: args["evidence_uri"] as string,
-    });
+    const { invoice_id, reason, details, evidence_uri } = parseInput(FileDisputeArgs, args);
+    const dispute = await wallet.fileDispute({ invoiceId: invoice_id, reason, details, evidenceUri: evidence_uri });
     return { success: true, disputeId: dispute.disputeId, status: dispute.status };
   },
 };

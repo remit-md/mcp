@@ -164,7 +164,7 @@ describe("MCP server — protocol level", () => {
   it("tools/call open_tab returns tabId in result", async () => {
     const result = await client.callTool({
       name: "open_tab",
-      arguments: { to: OTHER, limit: 100, perUnit: 1 },
+      arguments: { to: OTHER, limit: 100, per_unit: 1 },
     });
     const [first] = result.content as Array<{ type: string; text: string }>;
     const parsed = JSON.parse(first.text) as Record<string, unknown>;
