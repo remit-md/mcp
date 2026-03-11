@@ -3,7 +3,7 @@
 // These tests use the MCP SDK's InMemoryTransport + Client to exercise the
 // server via the actual JSON-RPC protocol layer — not just by calling handler
 // functions directly.  This verifies:
-//   1. tools/list returns all 13 registered tools
+//   1. tools/list returns all 12 registered tools
 //   2. tools/call happy-path returns text content with the tool result
 //   3. tools/call for an unknown tool name propagates as a protocol error
 //   4. resources/list returns at least one resource
@@ -90,7 +90,6 @@ const EXPECTED_TOOL_NAMES = [
   "post_bounty",
   "award_bounty",
   "place_deposit",
-  "file_dispute",
   "check_balance",
   "get_status",
 ];
