@@ -117,11 +117,6 @@ describe("verify_delivery prompt", () => {
     assert.ok(msgs[1]!.content.text.includes("release_escrow"));
   });
 
-  it("assistant message mentions file_dispute", () => {
-    const msgs = getPrompt("verify_delivery", { invoice_id: "inv-42" });
-    assert.ok(msgs[1]!.content.text.includes("file_dispute"));
-  });
-
   it("assistant message references escrow resource URI", () => {
     const msgs = getPrompt("verify_delivery", { invoice_id: "inv-42" });
     assert.ok(msgs[1]!.content.text.includes("remit://escrow/inv-42/status"));

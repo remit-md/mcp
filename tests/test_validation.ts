@@ -20,7 +20,6 @@ import {
   PostBountyArgs,
   AwardBountyArgs,
   PlaceDepositArgs,
-  FileDisputeArgs,
 } from "../src/tools/validate.js";
 
 const ADDR = "0xaaaa000000000000000000000000000000000001";
@@ -220,30 +219,3 @@ describe("PlaceDepositArgs", () => {
   });
 });
 
-// ── FileDisputeArgs ───────────────────────────────────────────────────────────
-
-describe("FileDisputeArgs", () => {
-  it("accepts valid args", () => {
-    const result = parseInput(FileDisputeArgs, {
-      invoice_id: "inv-1",
-      reason: "non_delivery",
-      details: "They didn't deliver",
-      evidence_uri: "ipfs://QmXxx",
-    });
-    assert.equal(result.evidence_uri, "ipfs://QmXxx");
-  });
-
-  it("rejects empty details", () => {
-    expectInvalidParams(
-      () => parseInput(FileDisputeArgs, { invoice_id: "inv-1", reason: "x", details: "", evidence_uri: "x" }),
-      "details",
-    );
-  });
-
-  it("rejects missing evidence_uri", () => {
-    expectInvalidParams(
-      () => parseInput(FileDisputeArgs, { invoice_id: "inv-1", reason: "x", details: "x" }),
-      "evidence_uri",
-    );
-  });
-});

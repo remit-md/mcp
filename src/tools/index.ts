@@ -3,7 +3,6 @@ import { tabTools } from "./tabs.js";
 import { streamTools } from "./streams.js";
 import { bountyTools } from "./bounties.js";
 import { depositTools } from "./deposits.js";
-import { disputeTools } from "./disputes.js";
 import { statusTools } from "./status.js";
 import type { Tool, WalletLike } from "../types.js";
 
@@ -13,7 +12,6 @@ export const ALL_TOOLS: Tool[] = [
   ...streamTools,
   ...bountyTools,
   ...depositTools,
-  ...disputeTools,
   ...statusTools,
 ];
 

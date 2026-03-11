@@ -32,7 +32,7 @@ export const createEscrowTool: Tool = {
   definition: {
     name: "create_escrow",
     description:
-      "Fund an escrow for a task or service. Funds are held until you release them or a dispute is resolved. Use for freelance work, code review, content creation, etc.",
+      "Fund an escrow for a task or service. Funds are held until you release them. Use for freelance work, code review, content creation, etc.",
     inputSchema: {
       type: "object",
       properties: {

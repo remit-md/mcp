@@ -94,11 +94,4 @@ export const PlaceDepositArgs = z.object({
   expires: positiveInt,
 });
 
-export const FileDisputeArgs = z.object({
-  invoice_id: nonEmptyString,
-  reason: nonEmptyString,
-  details: nonEmptyString,
-  evidence_uri: nonEmptyString,
-});
-
 // check_balance and get_status take no args — no schema needed.

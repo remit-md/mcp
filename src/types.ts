@@ -28,7 +28,6 @@ export interface Reputation {
   address: string;
   score: number;
   completedPayments: number;
-  disputes: number;
   tier: string;
 }
 
@@ -87,14 +86,6 @@ export interface Deposit {
   expiresAt: number;
 }
 
-export interface Dispute {
-  disputeId: string;
-  invoiceId: string;
-  reason: string;
-  status: string;
-  createdAt: number;
-}
-
 export interface RemitEvent {
   type: string;
   timestamp: number;
@@ -131,13 +122,6 @@ export interface PlaceDepositOptions {
   expires: number;
 }
 
-export interface FileDisputeOptions {
-  invoiceId: string;
-  reason: string;
-  details: string;
-  evidenceUri: string;
-}
-
 // ─── WalletLike ───────────────────────────────────────────────────────────────
 
 /** Minimal interface needed by tool and resource handlers. Structurally compatible with @remitmd/sdk Wallet. */
@@ -157,7 +141,6 @@ export interface WalletLike {
   postBounty(options: PostBountyOptions): Promise<Bounty>;
   awardBounty(bountyId: string, winner: string): Promise<Transaction>;
   placeDeposit(options: PlaceDepositOptions): Promise<Deposit>;
-  fileDispute(options: FileDisputeOptions): Promise<Dispute>;
   balance(): Promise<number>;
   status(): Promise<WalletStatus>;
 
@@ -186,7 +169,6 @@ const WALLET_LIKE_METHODS: ReadonlyArray<keyof WalletLike> = [
   "postBounty",
   "awardBounty",
   "placeDeposit",
-  "fileDispute",
   "balance",
   "status",
   "getStatus",

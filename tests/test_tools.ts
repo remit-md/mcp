@@ -9,7 +9,6 @@ import type {
   Stream,
   Bounty,
   Deposit,
-  Dispute,
   Escrow,
   Reputation,
   RemitEvent,
@@ -50,14 +49,6 @@ function makeMock(): WalletLike {
     awardBounty: async () => TX,
     placeDeposit: async () =>
       ({ depositId: "dep-1", to: OTHER, amount: 25, status: "locked", expiresAt: 9_999_999 } as Deposit),
-    fileDispute: async () =>
-      ({
-        disputeId: "dispute-1",
-        invoiceId: "inv-1",
-        reason: "non_delivery",
-        status: "filed",
-        createdAt: 1_000_000,
-      } as Dispute),
     balance: async () => 500.0,
     status: async () =>
       ({
@@ -87,7 +78,7 @@ function makeMock(): WalletLike {
     getBounty: async (id) =>
       ({ bountyId: id, task: "test", amount: 50, status: "open", deadline: 9_999_999 } as Bounty),
     getReputation: async (addr) =>
-      ({ address: addr, score: 92, completedPayments: 150, disputes: 2, tier: "premium" } as Reputation),
+      ({ address: addr, score: 92, completedPayments: 150, tier: "premium" } as Reputation),
     getEvents: async () => [] as RemitEvent[],
   };
 }
@@ -95,8 +86,8 @@ function makeMock(): WalletLike {
 // ─── Schema tests ─────────────────────────────────────────────────────────────
 
 describe("tool registry", () => {
-  it("has exactly 13 tools", () => {
-    assert.equal(ALL_TOOLS.length, 13);
+  it("has exactly 12 tools", () => {
+    assert.equal(ALL_TOOLS.length, 12);
   });
 
   it("all tool names are unique", () => {
@@ -116,7 +107,6 @@ describe("tool registry", () => {
       "post_bounty",
       "award_bounty",
       "place_deposit",
-      "file_dispute",
       "check_balance",
       "get_status",
     ];
@@ -278,34 +268,6 @@ describe("place_deposit handler", () => {
     ) as Record<string, unknown>;
     assert.equal(result["success"], true);
     assert.equal(result["depositId"], "dep-1");
-  });
-});
-
-describe("file_dispute handler", () => {
-  it("returns disputeId", async () => {
-    const result = await callTool(
-      "file_dispute",
-      {
-        invoice_id: "inv-1",
-        reason: "non_delivery",
-        details: "Work not submitted",
-        evidence_uri: "ipfs://Qm123",
-      },
-      makeMock(),
-    ) as Record<string, unknown>;
-    assert.equal(result["success"], true);
-    assert.equal(result["disputeId"], "dispute-1");
-  });
-
-  it("key never appears in result", async () => {
-    const result = JSON.stringify(
-      await callTool(
-        "file_dispute",
-        { invoice_id: "inv-1", reason: "r", details: "d", evidence_uri: "e" },
-        makeMock(),
-      ),
-    );
-    assert.ok(!result.includes("0x") || result.includes("dispute-1"), "Unexpected hex in result");
   });
 });
 
