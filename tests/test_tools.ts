@@ -81,14 +81,16 @@ function makeMock(): WalletLike {
       ({ address: addr, score: 92, completedPayments: 150, tier: "premium" } as Reputation),
     getEvents: async () => [] as RemitEvent[],
     x402Fetch: async () => new Response('{"data":"paid"}', { status: 200 }),
+    createFundLink: async () => ({ url: "https://remit.md/fund/abc", token: "abc", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
+    createWithdrawLink: async () => ({ url: "https://remit.md/withdraw/xyz", token: "xyz", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
   };
 }
 
 // ─── Schema tests ─────────────────────────────────────────────────────────────
 
 describe("tool registry", () => {
-  it("has exactly 14 tools", () => {
-    assert.equal(ALL_TOOLS.length, 14);
+  it("has exactly 16 tools", () => {
+    assert.equal(ALL_TOOLS.length, 16);
   });
 
   it("all tool names are unique", () => {
@@ -112,6 +114,8 @@ describe("tool registry", () => {
       "get_status",
       "x402_pay",
       "x402_config",
+      "create_fund_link",
+      "create_withdraw_link",
     ];
     for (const name of expected) {
       assert.ok(toolRegistry.has(name), `Missing tool: ${name}`);
@@ -405,5 +409,29 @@ describe("x402_pay handler", () => {
       () => callTool("x402_pay", { url: "not-a-url" }, makeMock()),
       /InvalidParams|url/i,
     );
+  });
+});
+
+// ─── create_fund_link handler ─────────────────────────────────────────────────
+
+describe("create_fund_link handler", () => {
+  it("returns url, token, expiresAt, walletAddress", async () => {
+    const result = await callTool("create_fund_link", {}, makeMock()) as Record<string, unknown>;
+    assert.equal(result["url"], "https://remit.md/fund/abc");
+    assert.equal(result["token"], "abc");
+    assert.equal(result["walletAddress"], ADDR);
+    assert.ok(result["expiresAt"]);
+  });
+});
+
+// ─── create_withdraw_link handler ────────────────────────────────────────────
+
+describe("create_withdraw_link handler", () => {
+  it("returns url, token, expiresAt, walletAddress", async () => {
+    const result = await callTool("create_withdraw_link", {}, makeMock()) as Record<string, unknown>;
+    assert.equal(result["url"], "https://remit.md/withdraw/xyz");
+    assert.equal(result["token"], "xyz");
+    assert.equal(result["walletAddress"], ADDR);
+    assert.ok(result["expiresAt"]);
   });
 });

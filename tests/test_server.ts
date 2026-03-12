@@ -75,6 +75,8 @@ function makeMockWallet(): WalletLike {
     getReputation: async () => ({ address: OTHER, score: 90, completedPayments: 10, disputes: 0, tier: "standard" } as Reputation),
     getEvents: async () => [] as RemitEvent[],
     x402Fetch: async () => new Response('OK', { status: 200 }),
+    createFundLink: async () => ({ url: "https://remit.md/fund/tok", token: "tok", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
+    createWithdrawLink: async () => ({ url: "https://remit.md/withdraw/tok", token: "tok", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
   };
 }
 
@@ -95,6 +97,8 @@ const EXPECTED_TOOL_NAMES = [
   "get_status",
   "x402_pay",
   "x402_config",
+  "create_fund_link",
+  "create_withdraw_link",
 ];
 
 // ── Test suite ────────────────────────────────────────────────────────────────
@@ -121,7 +125,7 @@ describe("MCP server — protocol level", () => {
 
   // ── tools/list ────────────────────────────────────────────────────────────
 
-  it("tools/list returns all 14 registered tools", async () => {
+  it("tools/list returns all 16 registered tools", async () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name);
     assert.equal(tools.length, EXPECTED_TOOL_NAMES.length, `Expected ${EXPECTED_TOOL_NAMES.length} tools, got ${tools.length}: ${names.join(", ")}`);
