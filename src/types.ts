@@ -92,6 +92,13 @@ export interface RemitEvent {
   payload: unknown;
 }
 
+export interface LinkResponse {
+  url: string;
+  token: string;
+  expiresAt: string;
+  walletAddress: string;
+}
+
 // ─── Options ─────────────────────────────────────────────────────────────────
 
 export interface OpenTabOptions {
@@ -143,6 +150,8 @@ export interface WalletLike {
   placeDeposit(options: PlaceDepositOptions): Promise<Deposit>;
   balance(): Promise<number>;
   status(): Promise<WalletStatus>;
+  createFundLink(): Promise<LinkResponse>;
+  createWithdrawLink(): Promise<LinkResponse>;
 
   // x402 micropayment fetch
   x402Fetch(url: string, maxAutoPayUsdc?: number, init?: RequestInit): Promise<Response>;
@@ -174,6 +183,8 @@ const WALLET_LIKE_METHODS: ReadonlyArray<keyof WalletLike> = [
   "placeDeposit",
   "balance",
   "status",
+  "createFundLink",
+  "createWithdrawLink",
   "x402Fetch",
   "getStatus",
   "getInvoice",
