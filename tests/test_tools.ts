@@ -89,8 +89,8 @@ function makeMock(): WalletLike {
 // ─── Schema tests ─────────────────────────────────────────────────────────────
 
 describe("tool registry", () => {
-  it("has exactly 16 tools", () => {
-    assert.equal(ALL_TOOLS.length, 16);
+  it("has exactly 17 tools", () => {
+    assert.equal(ALL_TOOLS.length, 17);
   });
 
   it("all tool names are unique", () => {
@@ -114,6 +114,7 @@ describe("tool registry", () => {
       "get_status",
       "x402_pay",
       "x402_config",
+      "x402_paywall_setup",
       "create_fund_link",
       "create_withdraw_link",
     ];
@@ -467,5 +468,82 @@ describe("create_withdraw_link handler", () => {
     assert.equal(result["token"], "xyz");
     assert.equal(result["walletAddress"], ADDR);
     assert.ok(result["expiresAt"]);
+  });
+});
+
+// ─── x402_paywall_setup handler ───────────────────────────────────────────────
+
+const SETUP_BASE = {
+  wallet_address: OTHER,
+  amount_usdc: 0.001,
+  network: "eip155:84532",
+};
+
+describe("x402_paywall_setup handler", () => {
+  it("returns install + code for Python FastAPI (default)", async () => {
+    const result = await callTool("x402_paywall_setup", { language: "python", ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    assert.ok(typeof result["install"] === "string", "install must be a string");
+    assert.ok(typeof result["code"] === "string", "code must be a string");
+    assert.ok((result["install"] as string).includes("remitmd"), "install must mention remitmd");
+    assert.ok((result["code"] as string).includes("fastapi_dependency"), "FastAPI code must use fastapi_dependency");
+    assert.ok((result["code"] as string).includes(OTHER), "code must embed wallet_address");
+    assert.ok((result["code"] as string).includes("0.001"), "code must embed amount_usdc");
+  });
+
+  it("returns Flask code when framework=flask", async () => {
+    const result = await callTool("x402_paywall_setup", { language: "python", framework: "flask", ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    assert.ok((result["code"] as string).includes("flask_route"), "Flask code must use flask_route");
+    assert.ok((result["install"] as string).includes("flask"), "install must mention flask");
+  });
+
+  it("returns Hono code for TypeScript (default)", async () => {
+    const result = await callTool("x402_paywall_setup", { language: "typescript", ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    assert.ok((result["code"] as string).includes("honoMiddleware"), "TS default must use honoMiddleware");
+    assert.ok((result["install"] as string).includes("hono"), "install must mention hono");
+  });
+
+  it("returns Express code when framework=express", async () => {
+    const result = await callTool("x402_paywall_setup", { language: "typescript", framework: "express", ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    assert.ok((result["code"] as string).includes("paywall.check"), "Express code must use paywall.check");
+    assert.ok((result["install"] as string).includes("express"), "install must mention express");
+  });
+
+  it("returns Go code", async () => {
+    const result = await callTool("x402_paywall_setup", { language: "go", ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    assert.ok((result["install"] as string).includes("go get"), "Go install must use go get");
+    assert.ok((result["code"] as string).includes("NewX402Paywall"), "Go code must use NewX402Paywall");
+    assert.ok((result["code"] as string).includes("Middleware"), "Go code must use Middleware");
+  });
+
+  it("includes V2 fields when provided", async () => {
+    const result = await callTool("x402_paywall_setup", {
+      language: "python",
+      ...SETUP_BASE,
+      resource: "/v1/data",
+      description: "Market data",
+      mime_type: "application/json",
+    }, makeMock()) as Record<string, unknown>;
+    const code = result["code"] as string;
+    assert.ok(code.includes("/v1/data"), "code must include resource");
+    assert.ok(code.includes("Market data"), "code must include description");
+    assert.ok(code.includes("application/json"), "code must include mime_type");
+  });
+
+  it("uses default USDC address when asset omitted", async () => {
+    const result = await callTool("x402_paywall_setup", { language: "python", ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    assert.ok((result["code"] as string).includes("0x036CbD53842c5426634e7929541eC2318f3dCF7e"), "must use default USDC");
+  });
+
+  it("uses provided asset address when given", async () => {
+    const customUsdc = "0x1234567890123456789012345678901234567890";
+    const result = await callTool("x402_paywall_setup", { language: "typescript", asset: customUsdc, ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    assert.ok((result["code"] as string).includes(customUsdc), "must use provided asset address");
+  });
+
+  it("rejects invalid wallet_address", async () => {
+    await assert.rejects(
+      () => callTool("x402_paywall_setup", { language: "python", wallet_address: "not-an-address", amount_usdc: 0.001, network: "eip155:84532" }, makeMock()),
+      /InvalidParams|address/i,
+    );
   });
 });

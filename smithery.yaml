@@ -1,0 +1,39 @@
+# Smithery registry configuration for @remitmd/mcp-server
+# https://smithery.ai/server/@remitmd/mcp-server
+
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      REMITMD_KEY:
+        type: string
+        title: "Wallet Private Key"
+        description: "EVM private key (0x-prefixed) for the agent wallet that will send and receive payments."
+        x-secret: true
+      REMITMD_CHAIN:
+        type: string
+        title: "Chain"
+        description: "Target chain. Use 'base' for Base mainnet or 'base-sepolia' for testnet."
+        default: "base-sepolia"
+        enum: ["base", "base-sepolia"]
+      REMITMD_API_URL:
+        type: string
+        title: "API URL"
+        description: "remit.md facilitator API base URL. Leave blank to use the default."
+        default: "https://remit.md/api/v0"
+    required:
+      - REMITMD_KEY
+  commandFunction: |-
+    (config) => ({
+      command: "npx",
+      args: ["-y", "@remitmd/mcp-server"],
+      env: {
+        REMITMD_KEY: config.REMITMD_KEY,
+        REMITMD_CHAIN: config.REMITMD_CHAIN || "base-sepolia",
+        REMITMD_API_URL: config.REMITMD_API_URL || "https://remit.md/api/v0",
+      },
+    })
+  exampleConfig:
+    REMITMD_KEY: "0x0000000000000000000000000000000000000000000000000000000000000001"
+    REMITMD_CHAIN: "base-sepolia"

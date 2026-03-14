@@ -104,4 +104,16 @@ export const X402ConfigArgs = z.object({
   enabled: z.boolean().optional(),
 });
 
+export const X402PaywallSetupArgs = z.object({
+  language: z.enum(["python", "typescript", "go"]),
+  wallet_address: address,
+  amount_usdc: positiveNumber,
+  network: nonEmptyString,
+  asset: nonEmptyString.optional(),
+  framework: z.enum(["fastapi", "flask", "hono", "express", "net/http"]).optional(),
+  resource: z.string().optional(),
+  description: z.string().optional(),
+  mime_type: z.string().optional(),
+});
+
 // check_balance and get_status take no args — no schema needed.

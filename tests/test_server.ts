@@ -97,6 +97,7 @@ const EXPECTED_TOOL_NAMES = [
   "get_status",
   "x402_pay",
   "x402_config",
+  "x402_paywall_setup",
   "create_fund_link",
   "create_withdraw_link",
 ];
@@ -125,7 +126,7 @@ describe("MCP server — protocol level", () => {
 
   // ── tools/list ────────────────────────────────────────────────────────────
 
-  it("tools/list returns all 16 registered tools", async () => {
+  it("tools/list returns all 17 registered tools", async () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name);
     assert.equal(tools.length, EXPECTED_TOOL_NAMES.length, `Expected ${EXPECTED_TOOL_NAMES.length} tools, got ${tools.length}: ${names.join(", ")}`);
