@@ -42,9 +42,20 @@ export const x402PayTool: Tool = {
     }
     const { url, max_usdc } = parseInput(X402PayArgs, args);
     const limit = max_usdc ?? x402Config.maxAutoPayUsdc;
-    const response = await wallet.x402Fetch(url, limit);
+    const { response, lastPayment } = await wallet.x402Fetch(url, limit);
     const body = await response.text();
-    return { status: response.status, ok: response.ok, body };
+    const result: Record<string, unknown> = { status: response.status, ok: response.ok, body };
+    if (lastPayment !== null) {
+      const payment: Record<string, unknown> = {
+        amount: lastPayment.amount,
+        network: lastPayment.network,
+      };
+      if (lastPayment.resource !== undefined) payment["resource"] = lastPayment.resource;
+      if (lastPayment.description !== undefined) payment["description"] = lastPayment.description;
+      if (lastPayment.mimeType !== undefined) payment["mimeType"] = lastPayment.mimeType;
+      result["payment"] = payment;
+    }
+    return result;
   },
 };
 

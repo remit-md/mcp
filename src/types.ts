@@ -4,6 +4,27 @@
  * can be tested without importing the SDK package.
  */
 
+// ─── x402 Types ──────────────────────────────────────────────────────────────
+
+/** Decoded PAYMENT-REQUIRED header (V2). Optional fields available when server sends them. */
+export interface X402PaymentRequired {
+  scheme: string;
+  network: string;
+  amount: string;
+  asset: string;
+  payTo: string;
+  maxTimeoutSeconds?: number;
+  resource?: string;
+  description?: string;
+  mimeType?: string;
+}
+
+/** Return type of x402Fetch — response plus V2 metadata from the PAYMENT-REQUIRED header. */
+export interface X402FetchResult {
+  response: Response;
+  lastPayment: X402PaymentRequired | null;
+}
+
 // ─── Domain Types ────────────────────────────────────────────────────────────
 
 export interface Transaction {
@@ -154,7 +175,7 @@ export interface WalletLike {
   createWithdrawLink(): Promise<LinkResponse>;
 
   // x402 micropayment fetch
-  x402Fetch(url: string, maxAutoPayUsdc?: number, init?: RequestInit): Promise<Response>;
+  x402Fetch(url: string, maxAutoPayUsdc?: number, init?: RequestInit): Promise<X402FetchResult>;
 
   // Read operations (needed for resources + status tools)
   getStatus(wallet: string): Promise<WalletStatus>;

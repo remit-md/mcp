@@ -80,7 +80,7 @@ function makeMock(): WalletLike {
     getReputation: async (addr) =>
       ({ address: addr, score: 92, completedPayments: 150, tier: "premium" } as Reputation),
     getEvents: async () => [] as RemitEvent[],
-    x402Fetch: async () => new Response('{"data":"paid"}', { status: 200 }),
+    x402Fetch: async () => ({ response: new Response('{"data":"paid"}', { status: 200 }), lastPayment: null }),
     createFundLink: async () => ({ url: "https://remit.md/fund/abc", token: "abc", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
     createWithdrawLink: async () => ({ url: "https://remit.md/withdraw/xyz", token: "xyz", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
   };
@@ -364,7 +364,7 @@ describe("x402_pay handler", () => {
     mock.x402Fetch = async (url, limit) => {
       capturedUrl = url;
       capturedLimit = limit;
-      return new Response('{"ok":true}', { status: 200 });
+      return { response: new Response('{"ok":true}', { status: 200 }), lastPayment: null };
     };
     const result = await callTool("x402_pay", { url: "https://example.com/resource" }, mock) as Record<string, unknown>;
     assert.equal(result["status"], 200);
@@ -379,7 +379,7 @@ describe("x402_pay handler", () => {
     let capturedLimit: number | undefined;
     mock.x402Fetch = async (_url, limit) => {
       capturedLimit = limit;
-      return new Response("data", { status: 200 });
+      return { response: new Response("data", { status: 200 }), lastPayment: null };
     };
     await callTool("x402_pay", { url: "https://example.com/resource", max_usdc: 0.50 }, mock);
     assert.equal(capturedLimit, 0.50);
@@ -388,9 +388,43 @@ describe("x402_pay handler", () => {
   it("returns body text from response", async () => {
     await callTool("x402_config", { enabled: true }, makeMock());
     const mock = makeMock();
-    mock.x402Fetch = async () => new Response('{"result":"success"}', { status: 200 });
+    mock.x402Fetch = async () => ({ response: new Response('{"result":"success"}', { status: 200 }), lastPayment: null });
     const result = await callTool("x402_pay", { url: "https://example.com/resource" }, mock) as Record<string, unknown>;
     assert.equal(result["body"], '{"result":"success"}');
+  });
+
+  it("includes V2 payment metadata when lastPayment is present", async () => {
+    await callTool("x402_config", { enabled: true }, makeMock());
+    const mock = makeMock();
+    mock.x402Fetch = async () => ({
+      response: new Response('{"ok":true}', { status: 200 }),
+      lastPayment: {
+        scheme: "exact",
+        network: "eip155:84532",
+        amount: "1000",
+        asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        payTo: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+        resource: "/api/v0/premium",
+        description: "Premium data feed",
+        mimeType: "application/json",
+      },
+    });
+    const result = await callTool("x402_pay", { url: "https://example.com/api/v0/premium" }, mock) as Record<string, unknown>;
+    const payment = result["payment"] as Record<string, unknown>;
+    assert.ok(payment, "payment field must be present");
+    assert.equal(payment["amount"], "1000");
+    assert.equal(payment["network"], "eip155:84532");
+    assert.equal(payment["resource"], "/api/v0/premium");
+    assert.equal(payment["description"], "Premium data feed");
+    assert.equal(payment["mimeType"], "application/json");
+  });
+
+  it("omits payment field when no x402 payment was made (200 direct)", async () => {
+    await callTool("x402_config", { enabled: true }, makeMock());
+    const mock = makeMock();
+    mock.x402Fetch = async () => ({ response: new Response("ok", { status: 200 }), lastPayment: null });
+    const result = await callTool("x402_pay", { url: "https://example.com/free" }, mock) as Record<string, unknown>;
+    assert.equal(result["payment"], undefined, "payment field must be absent when no x402 occurred");
   });
 
   it("throws McpError when auto-pay is disabled", async () => {
