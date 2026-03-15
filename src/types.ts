@@ -107,10 +107,15 @@ export interface Deposit {
   expiresAt: number;
 }
 
-export interface RemitEvent {
-  type: string;
-  timestamp: number;
-  payload: unknown;
+export interface Webhook {
+  id: string;
+  wallet: string;
+  url: string;
+  events: string[];
+  chains: string[];
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface LinkResponse {
@@ -184,7 +189,9 @@ export interface WalletLike {
   getTab(tabId: string): Promise<Tab>;
   getBounty(bountyId: string): Promise<Bounty>;
   getReputation(wallet: string): Promise<Reputation>;
-  getEvents(wallet: string, since?: number): Promise<RemitEvent[]>;
+  registerWebhook(url: string, events: string[], chains?: string[]): Promise<Webhook>;
+  listWebhooks(): Promise<Webhook[]>;
+  deleteWebhook(id: string): Promise<void>;
 }
 
 // ─── WalletLike runtime type guard ───────────────────────────────────────────
@@ -213,7 +220,9 @@ const WALLET_LIKE_METHODS: ReadonlyArray<keyof WalletLike> = [
   "getTab",
   "getBounty",
   "getReputation",
-  "getEvents",
+  "registerWebhook",
+  "listWebhooks",
+  "deleteWebhook",
 ];
 
 /**

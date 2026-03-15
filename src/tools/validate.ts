@@ -116,4 +116,14 @@ export const X402PaywallSetupArgs = z.object({
   mime_type: z.string().optional(),
 });
 
+export const RegisterWebhookArgs = z.object({
+  url: z.string().url("must be a valid URL"),
+  events: z.array(nonEmptyString).min(1, "must specify at least one event type"),
+  chains: z.array(nonEmptyString).optional(),
+});
+
+export const DeleteWebhookArgs = z.object({
+  id: nonEmptyString,
+});
+
 // check_balance and get_status take no args — no schema needed.

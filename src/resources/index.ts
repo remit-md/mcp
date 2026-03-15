@@ -21,12 +21,6 @@ const RESOURCE_DEFINITIONS: ResourceDefinition[] = [
     mimeType: "application/json",
   },
   {
-    uri: "remit://wallet/{address}/transactions",
-    name: "Transaction History",
-    description: "Recent payment events for a wallet",
-    mimeType: "application/json",
-  },
-  {
     uri: "remit://invoice/{id}",
     name: "Invoice",
     description: "Invoice details including type, amount, and status",
@@ -59,16 +53,15 @@ export function listResources(): ResourceDefinition[] {
 type ParsedUri =
   | { type: "balance"; address: string }
   | { type: "reputation"; address: string }
-  | { type: "transactions"; address: string }
   | { type: "invoice"; id: string }
   | { type: "escrow_status"; id: string }
   | { type: "tab_usage"; id: string }
   | { type: "bounty_submissions"; id: string };
 
 function parseUri(uri: string): ParsedUri | null {
-  const walletMatch = /^remit:\/\/wallet\/([^/]+)\/(balance|reputation|transactions)$/.exec(uri);
+  const walletMatch = /^remit:\/\/wallet\/([^/]+)\/(balance|reputation)$/.exec(uri);
   if (walletMatch) {
-    const subtype = walletMatch[2] as "balance" | "reputation" | "transactions";
+    const subtype = walletMatch[2] as "balance" | "reputation";
     return { type: subtype, address: walletMatch[1] as string };
   }
 
@@ -104,10 +97,6 @@ export async function readResource(
     }
     case "reputation": {
       data = await wallet.getReputation(parsed.address);
-      break;
-    }
-    case "transactions": {
-      data = await wallet.getEvents(parsed.address);
       break;
     }
     case "invoice": {

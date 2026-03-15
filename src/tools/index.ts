@@ -6,6 +6,7 @@ import { depositTools } from "./deposits.js";
 import { statusTools } from "./status.js";
 import { x402Tools } from "./x402.js";
 import { linkTools } from "./links.js";
+import { webhookTools } from "./webhooks.js";
 import type { Tool, WalletLike } from "../types.js";
 
 export const ALL_TOOLS: Tool[] = [
@@ -17,6 +18,7 @@ export const ALL_TOOLS: Tool[] = [
   ...statusTools,
   ...x402Tools,
   ...linkTools,
+  ...webhookTools,
 ];
 
 export const toolRegistry: Map<string, Tool> = new Map(
