@@ -12,7 +12,6 @@ import type {
   Dispute,
   Escrow,
   Reputation,
-  RemitEvent,
   Invoice,
 } from "../src/types.js";
 
@@ -44,15 +43,14 @@ function makeMock(): WalletLike {
     getTab: async (id) => ({ tabId: id, to: OTHER, limit: 50, perUnit: 0.5, used: 10, status: "open", expiresAt: 9_999_999 } as Tab),
     getBounty: async (id) => ({ bountyId: id, task: "find the bug", amount: 20, status: "open", deadline: 9_999_999 } as Bounty),
     getReputation: async (addr) => ({ address: addr, score: 95, completedPayments: 300, disputes: 1, tier: "elite" } as Reputation),
-    getEvents: async () => [{ type: "PaymentReceived", timestamp: 1_000_001, payload: { amount: 5 } }] as RemitEvent[],
   };
 }
 
 // ─── listResources ────────────────────────────────────────────────────────────
 
 describe("listResources", () => {
-  it("returns exactly 7 resources", () => {
-    assert.equal(listResources().length, 7);
+  it("returns exactly 6 resources", () => {
+    assert.equal(listResources().length, 6);
   });
 
   it("all resources have uri, name, description, mimeType", () => {
@@ -96,18 +94,6 @@ describe("readResource — wallet/reputation", () => {
     const data = JSON.parse(text) as Record<string, unknown>;
     assert.equal(data["score"], 95);
     assert.equal(data["tier"], "elite");
-  });
-});
-
-describe("readResource — wallet/transactions", () => {
-  it("returns array of events", async () => {
-    const { text } = await readResource(
-      `remit://wallet/${ADDR}/transactions`,
-      makeMock(),
-    );
-    const events = JSON.parse(text) as unknown[];
-    assert.ok(Array.isArray(events));
-    assert.equal(events.length, 1);
   });
 });
 
@@ -168,7 +154,6 @@ describe("readResource — key isolation", () => {
     const uris = [
       `remit://wallet/${ADDR}/balance`,
       `remit://wallet/${ADDR}/reputation`,
-      `remit://wallet/${ADDR}/transactions`,
       "remit://invoice/inv-1",
       "remit://escrow/inv-1/status",
       "remit://tab/tab-1/usage",

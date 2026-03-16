@@ -89,8 +89,8 @@ function makeMock(): WalletLike {
 // ─── Schema tests ─────────────────────────────────────────────────────────────
 
 describe("tool registry", () => {
-  it("has exactly 17 tools", () => {
-    assert.equal(ALL_TOOLS.length, 17);
+  it("has exactly 20 tools", () => {
+    assert.equal(ALL_TOOLS.length, 20);
   });
 
   it("all tool names are unique", () => {
@@ -117,6 +117,9 @@ describe("tool registry", () => {
       "x402_paywall_setup",
       "create_fund_link",
       "create_withdraw_link",
+      "register_webhook",
+      "list_webhooks",
+      "delete_webhook",
     ];
     for (const name of expected) {
       assert.ok(toolRegistry.has(name), `Missing tool: ${name}`);
