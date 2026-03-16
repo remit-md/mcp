@@ -7,10 +7,14 @@ on:
 
 jobs:
   test:
-    runs-on: [self-hosted, linux, x64]
-    # Node.js 20 + npm are pre-installed on the self-hosted runner.
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
       - name: Checkout and build SDK (local dependency)
         run: |
