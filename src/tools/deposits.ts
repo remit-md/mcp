@@ -15,13 +15,26 @@ export const placeDepositTool: Tool = {
           type: "number",
           description: "Seconds until deposit auto-expires and is returned to you",
         },
+        permit: {
+          type: "object",
+          description:
+            "Optional EIP-2612 permit signature for gasless USDC approval to the Deposit contract",
+          properties: {
+            value: { type: "number", description: "Approved amount in USDC base units" },
+            deadline: { type: "number", description: "Permit deadline (Unix timestamp)" },
+            v: { type: "number", description: "Recovery byte" },
+            r: { type: "string", description: "Signature r component (0x-prefixed 32 bytes)" },
+            s: { type: "string", description: "Signature s component (0x-prefixed 32 bytes)" },
+          },
+          required: ["value", "deadline", "v", "r", "s"],
+        },
       },
       required: ["to", "amount", "expires"],
     },
   },
   handler: async (args, wallet) => {
-    const { to, amount, expires } = parseInput(PlaceDepositArgs, args);
-    const deposit = await wallet.placeDeposit({ to, amount, expires });
+    const { to, amount, expires, permit } = parseInput(PlaceDepositArgs, args);
+    const deposit = await wallet.placeDeposit({ to, amount, expires, permit });
     return { success: true, depositId: deposit.depositId, status: deposit.status };
   },
 };

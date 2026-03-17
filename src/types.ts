@@ -141,18 +141,29 @@ export interface OpenStreamOptions {
   maxTotal?: number;
 }
 
+/** EIP-2612 permit signature for gasless USDC approval. */
+export interface PermitSignature {
+  value: number;
+  deadline: number;
+  v: number;
+  r: string;
+  s: string;
+}
+
 export interface PostBountyOptions {
   amount: number;
   task: string;
   deadline: number;
   validation?: "poster" | "oracle" | "multisig";
   maxAttempts?: number;
+  permit?: PermitSignature;
 }
 
 export interface PlaceDepositOptions {
   to: string;
   amount: number;
   expires: number;
+  permit?: PermitSignature;
 }
 
 // ─── WalletLike ───────────────────────────────────────────────────────────────
@@ -242,6 +253,8 @@ export interface JsonSchemaProperty {
   type: string;
   description?: string;
   enum?: string[];
+  properties?: Record<string, JsonSchemaProperty>;
+  required?: string[];
   items?: {
     type: string;
     properties?: Record<string, JsonSchemaProperty>;

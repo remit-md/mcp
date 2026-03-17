@@ -21,13 +21,26 @@ export const postBountyTool: Tool = {
           type: "number",
           description: "Maximum submission attempts allowed (default: 10)",
         },
+        permit: {
+          type: "object",
+          description:
+            "Optional EIP-2612 permit signature for gasless USDC approval to the Bounty contract",
+          properties: {
+            value: { type: "number", description: "Approved amount in USDC base units" },
+            deadline: { type: "number", description: "Permit deadline (Unix timestamp)" },
+            v: { type: "number", description: "Recovery byte" },
+            r: { type: "string", description: "Signature r component (0x-prefixed 32 bytes)" },
+            s: { type: "string", description: "Signature s component (0x-prefixed 32 bytes)" },
+          },
+          required: ["value", "deadline", "v", "r", "s"],
+        },
       },
       required: ["amount", "task", "deadline"],
     },
   },
   handler: async (args, wallet) => {
-    const { amount, task, deadline, validation, max_attempts } = parseInput(PostBountyArgs, args);
-    const bounty = await wallet.postBounty({ amount, task, deadline, validation, maxAttempts: max_attempts });
+    const { amount, task, deadline, validation, max_attempts, permit } = parseInput(PostBountyArgs, args);
+    const bounty = await wallet.postBounty({ amount, task, deadline, validation, maxAttempts: max_attempts, permit });
     return { success: true, bountyId: bounty.bountyId, status: bounty.status };
   },
 };

@@ -26,6 +26,18 @@ const positiveNumber = z.number().positive("must be positive");
 const positiveInt = z.number().int("must be an integer").positive("must be positive");
 const nonEmptyString = z.string().min(1, "must not be empty");
 
+const hexBytes32 = z
+  .string()
+  .regex(/^0x[0-9a-fA-F]{64}$/, "must be a 0x-prefixed 32-byte hex string");
+
+const permitSchema = z.object({
+  value: positiveInt,
+  deadline: positiveInt,
+  v: z.number().int(),
+  r: hexBytes32,
+  s: hexBytes32,
+});
+
 // ── Per-tool input schemas ─────────────────────────────────────────────────────
 
 export const PayDirectArgs = z.object({
@@ -81,6 +93,7 @@ export const PostBountyArgs = z.object({
   deadline: positiveInt,
   validation: z.enum(["poster", "oracle", "multisig"]).optional(),
   max_attempts: positiveInt.optional(),
+  permit: permitSchema.optional(),
 });
 
 export const AwardBountyArgs = z.object({
@@ -92,6 +105,7 @@ export const PlaceDepositArgs = z.object({
   to: address,
   amount: positiveNumber,
   expires: positiveInt,
+  permit: permitSchema.optional(),
 });
 
 export const X402PayArgs = z.object({
