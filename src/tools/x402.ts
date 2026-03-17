@@ -93,9 +93,10 @@ export const x402ConfigTool: Tool = {
   },
 };
 
-// ─── Default USDC address (Base Sepolia / Base mainnet) ──────────────────────
+// ─── Default addresses (Base Sepolia) ────────────────────────────────────────
 
 const DEFAULT_USDC = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+const DEFAULT_ROUTER = "0x887536bD817B758f99F090a80F48032a24f50916";
 
 // ─── Code-generation helpers ──────────────────────────────────────────────────
 
@@ -124,7 +125,7 @@ function goV2Lines(resource?: string, description?: string, mimeType?: string): 
 }
 
 function buildPythonSnippet(
-  walletAddress: string, amountUsdc: number, network: string, asset: string,
+  walletAddress: string, routerAddress: string, amountUsdc: number, network: string, asset: string,
   framework: string, v2: string,
 ): { install: string; code: string } {
   if (framework === "flask") {
@@ -135,6 +136,7 @@ from flask import Flask, jsonify
 
 paywall = X402Paywall(
     wallet_address="${walletAddress}",
+    router_address="${routerAddress}",
     amount_usdc=${amountUsdc},
     network="${network}",
     asset="${asset}",
@@ -157,6 +159,7 @@ from fastapi import FastAPI, Depends
 
 paywall = X402Paywall(
     wallet_address="${walletAddress}",
+    router_address="${routerAddress}",
     amount_usdc=${amountUsdc},
     network="${network}",
     asset="${asset}",
@@ -172,7 +175,7 @@ async def your_endpoint(payment=Depends(paywall.fastapi_dependency)):
 }
 
 function buildTsSnippet(
-  walletAddress: string, amountUsdc: number, network: string, asset: string,
+  walletAddress: string, routerAddress: string, amountUsdc: number, network: string, asset: string,
   framework: string, v2: string,
 ): { install: string; code: string } {
   if (framework === "express") {
@@ -183,6 +186,7 @@ import express from "express";
 
 const paywall = new X402Paywall({
   walletAddress: "${walletAddress}",
+  routerAddress: "${routerAddress}",
   amountUsdc: ${amountUsdc},
   network: "${network}",
   asset: "${asset}",
@@ -212,6 +216,7 @@ import { Hono } from "hono";
 
 const paywall = new X402Paywall({
   walletAddress: "${walletAddress}",
+  routerAddress: "${routerAddress}",
   amountUsdc: ${amountUsdc},
   network: "${network}",
   asset: "${asset}",
@@ -225,7 +230,7 @@ app.get("/your-endpoint", (c) => c.json({ data: "..." }));`,
 }
 
 function buildGoSnippet(
-  walletAddress: string, amountUsdc: number, network: string, asset: string,
+  walletAddress: string, routerAddress: string, amountUsdc: number, network: string, asset: string,
   v2: string,
 ): { install: string; code: string } {
   return {
@@ -239,10 +244,11 @@ import (
 
 func main() {
 \tpaywall, err := remitmd.NewX402Paywall(remitmd.PaywallOptions{
-\t\tWalletAddress: "${walletAddress}",
-\t\tAmountUsdc:    ${amountUsdc},
-\t\tNetwork:       "${network}",
-\t\tAsset:         "${asset}",
+\t\tWalletAddress:  "${walletAddress}",
+\t\tRouterAddress:  "${routerAddress}",
+\t\tAmountUsdc:     ${amountUsdc},
+\t\tNetwork:        "${network}",
+\t\tAsset:          "${asset}",
 \t\tFacilitatorURL: "https://remit.md",${v2}
 \t})
 \tif err != nil {
@@ -273,7 +279,13 @@ export const x402PaywallSetupTool: Tool = {
         },
         wallet_address: {
           type: "string",
-          description: "Ethereum wallet address that will receive payments (the payTo address).",
+          description: "Ethereum wallet address that will receive payments.",
+        },
+        router_address: {
+          type: "string",
+          description:
+            "RemitRouter contract address. The agent signs EIP-3009 to this address; the Router deducts the protocol fee and forwards the net amount. " +
+            "Defaults to the Base Sepolia Router (0x887536bD817B758f99F090a80F48032a24f50916).",
         },
         amount_usdc: {
           type: "number",
@@ -314,26 +326,27 @@ export const x402PaywallSetupTool: Tool = {
     },
   },
   handler: async (args, _wallet) => {
-    const { language, wallet_address, amount_usdc, network, asset, framework, resource, description, mime_type } =
+    const { language, wallet_address, router_address, amount_usdc, network, asset, framework, resource, description, mime_type } =
       parseInput(X402PaywallSetupArgs, args);
 
     const usdcAddress = asset ?? DEFAULT_USDC;
+    const routerAddr = router_address ?? DEFAULT_ROUTER;
 
     if (language === "python") {
       const fw = framework ?? "fastapi";
       const v2 = pyV2Lines(resource, description, mime_type);
-      return buildPythonSnippet(wallet_address, amount_usdc, network, usdcAddress, fw, v2);
+      return buildPythonSnippet(wallet_address, routerAddr, amount_usdc, network, usdcAddress, fw, v2);
     }
 
     if (language === "typescript") {
       const fw = framework ?? "hono";
       const v2 = tsV2Lines(resource, description, mime_type);
-      return buildTsSnippet(wallet_address, amount_usdc, network, usdcAddress, fw, v2);
+      return buildTsSnippet(wallet_address, routerAddr, amount_usdc, network, usdcAddress, fw, v2);
     }
 
     // go
     const v2 = goV2Lines(resource, description, mime_type);
-    return buildGoSnippet(wallet_address, amount_usdc, network, usdcAddress, v2);
+    return buildGoSnippet(wallet_address, routerAddr, amount_usdc, network, usdcAddress, v2);
   },
 };
 

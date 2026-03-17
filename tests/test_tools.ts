@@ -537,6 +537,18 @@ describe("x402_paywall_setup handler", () => {
     assert.ok((result["code"] as string).includes("0x036CbD53842c5426634e7929541eC2318f3dCF7e"), "must use default USDC");
   });
 
+  it("uses default Router address when router_address omitted", async () => {
+    const result = await callTool("x402_paywall_setup", { language: "python", ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    assert.ok((result["code"] as string).includes("0x887536bD817B758f99F090a80F48032a24f50916"), "must use default Router");
+    assert.ok((result["code"] as string).includes("router_address"), "Python code must include router_address param");
+  });
+
+  it("uses provided router_address when given", async () => {
+    const customRouter = "0xABCDEF0123456789ABCDEF0123456789ABCDEF01";
+    const result = await callTool("x402_paywall_setup", { language: "typescript", router_address: customRouter, ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    assert.ok((result["code"] as string).includes(customRouter), "must use provided router address");
+  });
+
   it("uses provided asset address when given", async () => {
     const customUsdc = "0x1234567890123456789012345678901234567890";
     const result = await callTool("x402_paywall_setup", { language: "typescript", asset: customUsdc, ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
