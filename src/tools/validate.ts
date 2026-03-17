@@ -107,6 +107,7 @@ export const X402ConfigArgs = z.object({
 export const X402PaywallSetupArgs = z.object({
   language: z.enum(["python", "typescript", "go"]),
   wallet_address: address,
+  router_address: address.optional(),
   amount_usdc: positiveNumber,
   network: nonEmptyString,
   asset: nonEmptyString.optional(),
