@@ -1,0 +1,35 @@
+name: Acceptance Tests
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: acceptance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  acceptance:
+    name: MCP acceptance tests (Base Sepolia)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Checkout and build SDK (local dependency)
+        run: |
+          git clone --depth 1 https://github.com/remit-md/sdk.git ../sdk
+          cd ../sdk/typescript
+          npm install --legacy-peer-deps
+          npm run build
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run acceptance tests
+        run: npm run test:acceptance
