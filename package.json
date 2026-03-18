@@ -11,6 +11,7 @@
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
     "test": "node --import=./node_modules/tsx/dist/esm/index.cjs --test tests/*.ts",
+    "test:acceptance": "node --import=./node_modules/tsx/dist/esm/index.cjs --test tests/acceptance/*.test.ts",
     "test:coverage": "c8 --reporter=text --reporter=lcov --lines 60 --functions 60 --branches 60 node --import=./node_modules/tsx/dist/esm/index.cjs --test tests/*.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src"

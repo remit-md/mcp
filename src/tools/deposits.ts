@@ -1,5 +1,6 @@
 import type { Tool } from "../types.js";
 import { parseInput, PlaceDepositArgs } from "./validate.js";
+import { autoPermitFor } from "./permit-helper.js";
 
 export const placeDepositTool: Tool = {
   definition: {
@@ -34,7 +35,8 @@ export const placeDepositTool: Tool = {
   },
   handler: async (args, wallet) => {
     const { to, amount, expires, permit } = parseInput(PlaceDepositArgs, args);
-    const deposit = await wallet.placeDeposit({ to, amount, expires, permit });
+    const autoSigned = permit ?? (await autoPermitFor(wallet, "deposit", amount));
+    const deposit = await wallet.placeDeposit({ to, amount, expires, permit: autoSigned });
     return { success: true, depositId: deposit.depositId, status: deposit.status };
   },
 };

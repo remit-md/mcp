@@ -1,5 +1,6 @@
 import type { Tool } from "../types.js";
 import { parseInput, OpenTabArgs, CloseTabArgs } from "./validate.js";
+import { autoPermitFor } from "./permit-helper.js";
 
 export const openTabTool: Tool = {
   definition: {
@@ -22,7 +23,8 @@ export const openTabTool: Tool = {
   },
   handler: async (args, wallet) => {
     const { to, limit, per_unit, expires } = parseInput(OpenTabArgs, args);
-    const tab = await wallet.openTab({ to, limit, perUnit: per_unit, expires });
+    const permit = await autoPermitFor(wallet, "tab", limit);
+    const tab = await wallet.openTab({ to, limit, perUnit: per_unit, expires, ...(permit ? { permit } : {}) });
     return {
       success: true,
       tabId: tab.tabId,

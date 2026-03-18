@@ -1,5 +1,6 @@
 import type { Tool } from "../types.js";
 import { parseInput, OpenStreamArgs, CloseStreamArgs } from "./validate.js";
+import { autoPermitFor } from "./permit-helper.js";
 
 export const openStreamTool: Tool = {
   definition: {
@@ -22,7 +23,9 @@ export const openStreamTool: Tool = {
   },
   handler: async (args, wallet) => {
     const { to, rate, max_duration, max_total } = parseInput(OpenStreamArgs, args);
-    const stream = await wallet.openStream({ to, rate, maxDuration: max_duration, maxTotal: max_total });
+    const maxTotal = max_total ?? rate * (max_duration ?? 3600);
+    const permit = await autoPermitFor(wallet, "stream", maxTotal);
+    const stream = await wallet.openStream({ to, rate, maxDuration: max_duration, maxTotal: max_total, ...(permit ? { permit } : {}) });
     return {
       success: true,
       streamId: stream.streamId,

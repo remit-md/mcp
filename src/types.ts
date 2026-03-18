@@ -168,19 +168,31 @@ export interface PlaceDepositOptions {
 
 // ─── WalletLike ───────────────────────────────────────────────────────────────
 
+/** Contract addresses returned by GET /contracts. */
+export interface ContractAddresses {
+  chain_id: number;
+  usdc?: string;
+  router: string;
+  escrow?: string;
+  tab?: string;
+  stream?: string;
+  bounty?: string;
+  deposit?: string;
+}
+
 /** Minimal interface needed by tool and resource handlers. Structurally compatible with @remitmd/sdk Wallet. */
 export interface WalletLike {
   readonly address: string;
 
   // Write operations
-  payDirect(to: string, amount: number, memo?: string): Promise<Transaction>;
-  pay(invoice: Invoice): Promise<Transaction>;
+  payDirect(to: string, amount: number, memo?: string, options?: { permit?: PermitSignature }): Promise<Transaction>;
+  pay(invoice: Invoice, options?: { permit?: PermitSignature }): Promise<Transaction>;
   claimStart(invoiceId: string): Promise<Transaction>;
   releaseEscrow(invoiceId: string): Promise<Transaction>;
   cancelEscrow(invoiceId: string): Promise<Transaction>;
-  openTab(options: OpenTabOptions): Promise<Tab>;
+  openTab(options: OpenTabOptions & { permit?: PermitSignature }): Promise<Tab>;
   closeTab(tabId: string): Promise<Transaction>;
-  openStream(options: OpenStreamOptions): Promise<Stream>;
+  openStream(options: OpenStreamOptions & { permit?: PermitSignature }): Promise<Stream>;
   closeStream(streamId: string): Promise<Transaction>;
   postBounty(options: PostBountyOptions): Promise<Bounty>;
   awardBounty(bountyId: string, winner: string): Promise<Transaction>;
@@ -189,6 +201,10 @@ export interface WalletLike {
   status(): Promise<WalletStatus>;
   createFundLink(): Promise<LinkResponse>;
   createWithdrawLink(): Promise<LinkResponse>;
+
+  // Permit signing (optional — present on real SDK Wallet, absent on mocks)
+  signPermit?(spender: string, amount: number): Promise<PermitSignature>;
+  getContracts?(): Promise<ContractAddresses>;
 
   // x402 micropayment fetch
   x402Fetch(url: string, maxAutoPayUsdc?: number, init?: RequestInit): Promise<X402FetchResult>;

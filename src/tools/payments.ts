@@ -5,6 +5,7 @@ import {
   CreateEscrowArgs,
   ReleaseEscrowArgs,
 } from "./validate.js";
+import { autoPermitFor } from "./permit-helper.js";
 
 export const payDirectTool: Tool = {
   definition: {
@@ -23,7 +24,8 @@ export const payDirectTool: Tool = {
   },
   handler: async (args, wallet) => {
     const { to, amount, memo } = parseInput(PayDirectArgs, args);
-    const tx = await wallet.payDirect(to, amount, memo ?? "");
+    const permit = await autoPermitFor(wallet, "router", amount);
+    const tx = await wallet.payDirect(to, amount, memo ?? "", permit ? { permit } : undefined);
     return { success: true, txHash: tx.txHash, status: tx.status };
   },
 };
@@ -61,7 +63,11 @@ export const createEscrowTool: Tool = {
   },
   handler: async (args, wallet) => {
     const { to, amount, task, timeout, milestones } = parseInput(CreateEscrowArgs, args);
-    const tx = await wallet.pay({ to, amount, type: "escrow", memo: task, timeout, milestones });
+    const permit = await autoPermitFor(wallet, "escrow", amount);
+    const tx = await wallet.pay(
+      { to, amount, type: "escrow", memo: task, timeout, milestones },
+      permit ? { permit } : undefined,
+    );
     return { success: true, invoiceId: tx.invoiceId, txHash: tx.txHash, status: tx.status };
   },
 };

@@ -1,5 +1,6 @@
 import type { Tool } from "../types.js";
 import { parseInput, PostBountyArgs, AwardBountyArgs } from "./validate.js";
+import { autoPermitFor } from "./permit-helper.js";
 
 export const postBountyTool: Tool = {
   definition: {
@@ -40,7 +41,8 @@ export const postBountyTool: Tool = {
   },
   handler: async (args, wallet) => {
     const { amount, task, deadline, validation, max_attempts, permit } = parseInput(PostBountyArgs, args);
-    const bounty = await wallet.postBounty({ amount, task, deadline, validation, maxAttempts: max_attempts, permit });
+    const autoSigned = permit ?? (await autoPermitFor(wallet, "bounty", amount));
+    const bounty = await wallet.postBounty({ amount, task, deadline, validation, maxAttempts: max_attempts, permit: autoSigned });
     return { success: true, bountyId: bounty.bountyId, status: bounty.status };
   },
 };
