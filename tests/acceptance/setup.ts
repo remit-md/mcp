@@ -92,12 +92,35 @@ export async function getUsdcBalance(address: string): Promise<number> {
   return Number(BigInt(json.result ?? "0x0")) / 1e6;
 }
 
-export async function waitForBalance(address: string, minBalance: number, maxWaitMs = 30000): Promise<number> {
+export async function waitForBalance(address: string, minBalance: number, maxWaitMs = 60000): Promise<number> {
   const start = Date.now();
+  let delay = 2000;
   while (Date.now() - start < maxWaitMs) {
     const current = await getUsdcBalance(address);
     if (current >= minBalance - 0.01) return current;
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, delay));
+    delay = Math.min(delay * 1.5, 10000); // backoff up to 10s
   }
   return getUsdcBalance(address);
+}
+
+/** Retry an async function with exponential backoff. */
+export async function retry<T>(
+  fn: () => Promise<T>,
+  { attempts = 3, baseDelayMs = 2000, label = "operation" } = {},
+): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (i < attempts - 1) {
+        const delay = baseDelayMs * Math.pow(2, i);
+        console.log(`[retry] ${label} attempt ${i + 1}/${attempts} failed, retrying in ${delay}ms...`);
+        await new Promise((r) => setTimeout(r, delay));
+      }
+    }
+  }
+  throw lastErr;
 }
