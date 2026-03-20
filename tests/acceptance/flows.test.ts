@@ -10,6 +10,10 @@ import assert from "node:assert/strict";
 import { callTool } from "../../src/tools/index.js";
 import { createTestWallet, mintUsdc, waitForBalance, getUsdcBalance, type TestContext } from "./setup.js";
 
+function logTx(flow: string, step: string, txHash: string): void {
+  console.log(`[TX] ${flow} | ${step} | ${txHash} | https://sepolia.basescan.org/tx/${txHash}`);
+}
+
 describe("MCP acceptance: pay_direct", () => {
   let payer: TestContext;
   let recipient: TestContext;
@@ -30,6 +34,7 @@ describe("MCP acceptance: pay_direct", () => {
 
     assert.equal(result["success"], true, "should succeed");
     assert.ok(result["txHash"], "should have txHash");
+    logTx("direct", "pay", result["txHash"] as string);
     assert.equal(result["status"], "confirmed", "status should be confirmed");
   });
 });
@@ -54,6 +59,7 @@ describe("MCP acceptance: escrow lifecycle", () => {
     )) as Record<string, unknown>;
     assert.equal(create["success"], true);
     assert.ok(create["invoiceId"], "should have invoiceId");
+    if (create["txHash"]) logTx("escrow", "fund", create["txHash"] as string);
 
     // Release escrow
     const release = (await callTool(
@@ -63,6 +69,7 @@ describe("MCP acceptance: escrow lifecycle", () => {
     )) as Record<string, unknown>;
     assert.equal(release["success"], true);
     assert.ok(release["txHash"], "should have txHash");
+    logTx("escrow", "release", release["txHash"] as string);
   });
 });
 
@@ -84,6 +91,7 @@ describe("MCP acceptance: open_tab + close_tab", () => {
       payer.wallet,
     )) as Record<string, unknown>;
     assert.ok(open["tabId"], "should have tabId");
+    if (open["txHash"]) logTx("tab", "open", open["txHash"] as string);
 
     const close = (await callTool(
       "close_tab",
@@ -91,6 +99,7 @@ describe("MCP acceptance: open_tab + close_tab", () => {
       provider.wallet,
     )) as Record<string, unknown>;
     assert.equal(close["success"], true);
+    if (close["txHash"]) logTx("tab", "close", close["txHash"] as string);
   });
 });
 
@@ -113,6 +122,7 @@ describe("MCP acceptance: open_stream + close_stream", () => {
     )) as Record<string, unknown>;
     assert.ok(open["streamId"], "should have streamId");
     assert.equal(open["status"], "active");
+    if (open["txHash"]) logTx("stream", "open", open["txHash"] as string);
 
     // Wait briefly for some accrual
     await new Promise((r) => setTimeout(r, 3000));
@@ -123,6 +133,7 @@ describe("MCP acceptance: open_stream + close_stream", () => {
       payer.wallet,
     )) as Record<string, unknown>;
     assert.equal(close["success"], true);
+    if (close["txHash"]) logTx("stream", "close", close["txHash"] as string);
   });
 });
 
@@ -146,6 +157,7 @@ describe("MCP acceptance: post_bounty + award_bounty", () => {
     )) as Record<string, unknown>;
     assert.ok(post["bountyId"], "should have bountyId");
     assert.equal(post["status"], "open");
+    if (post["txHash"]) logTx("bounty", "post", post["txHash"] as string);
 
     const award = (await callTool(
       "award_bounty",
@@ -153,6 +165,7 @@ describe("MCP acceptance: post_bounty + award_bounty", () => {
       poster.wallet,
     )) as Record<string, unknown>;
     assert.equal(award["success"], true);
+    if (award["txHash"]) logTx("bounty", "award", award["txHash"] as string);
   });
 });
 
@@ -175,6 +188,7 @@ describe("MCP acceptance: place_deposit", () => {
     )) as Record<string, unknown>;
     assert.ok(result["depositId"], "should have depositId");
     assert.equal(result["status"], "active");
+    if (result["txHash"]) logTx("deposit", "place", result["txHash"] as string);
   });
 });
 
