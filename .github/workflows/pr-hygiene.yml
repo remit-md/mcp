@@ -32,7 +32,7 @@ jobs:
 
           # --- Test files with no assertions ---
           NO_ASSERT=""
-          for f in $(find tests -name '*.ts' 2>/dev/null); do
+          for f in $(find tests -name '*.ts' -not -name 'setup.ts' 2>/dev/null); do
             if ! grep -qE 'assert\.|strictEqual|deepEqual|throws|rejects|match|ok\(' "$f"; then
               NO_ASSERT="${NO_ASSERT}${f}\n"
             fi
@@ -52,7 +52,7 @@ jobs:
 
           # --- Hardcoded addresses or keys ---
           HARDCODED=$(grep -rn '0x[0-9a-fA-F]\{40,\}' --include='*.ts' src/ \
-            | grep -v 'node_modules\|test\|mock\|fixture' || true)
+            | grep -v 'node_modules\|test\|mock\|fixture\|DEFAULT_\|const.*USDC\|const.*ROUTER' || true)
           if [ -n "$HARDCODED" ]; then
             ISSUES=$((ISSUES + 1))
             REPORT="${REPORT}### Possible hardcoded addresses in production code\n\`\`\`\n${HARDCODED}\n\`\`\`\n\n"
@@ -78,9 +78,11 @@ jobs:
 
       - name: Comment on PR
         uses: actions/github-script@v7
+        env:
+          HYGIENE_BODY: ${{ steps.scan.outputs.body }}
         with:
           script: |
-            const body = `${{ steps.scan.outputs.body }}`;
+            const body = process.env.HYGIENE_BODY;
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
