@@ -23,10 +23,10 @@ Any AI agent with MCP support can pay for services, manage escrows, stream funds
 
 ## Capabilities
 
-**13 Tools:**
-Direct payments, escrow (create/release), tabs (open/close), streams (open/close), bounties (post/award), deposits (lock), disputes, status checks.
+**20 Tools:**
+Direct payments, escrow (create/release), tabs (open/close), streams (open/close), bounties (post/award), deposits (lock), disputes, status checks, fund/withdraw links (create_fund_link, create_withdraw_link), webhooks (register_webhook, list_webhooks, delete_webhook), x402 paywall (x402_paywall_setup, x402_config).
 
-**7 Resources:**
+**6 Resources:**
 Wallet balance, reputation score, transaction history, escrow details, tab details, stream details, protocol status.
 
 **3 Prompts:**
@@ -38,7 +38,7 @@ Wallet balance, reputation score, transaction history, escrow details, tab detai
 
 ```bash
 npm install
-npm test     # 60 tests
+npm test     # 116 tests
 npm run build
 ```
 
