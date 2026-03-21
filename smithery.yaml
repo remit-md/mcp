@@ -21,7 +21,7 @@ startCommand:
         type: string
         title: "API URL"
         description: "remit.md facilitator API base URL. Leave blank to use the default."
-        default: "https://remit.md/api/v0"
+        default: "https://remit.md/api/v1"
     required:
       - REMITMD_KEY
   commandFunction: |-
@@ -31,7 +31,7 @@ startCommand:
       env: {
         REMITMD_KEY: config.REMITMD_KEY,
         REMITMD_CHAIN: config.REMITMD_CHAIN || "base-sepolia",
-        REMITMD_API_URL: config.REMITMD_API_URL || "https://remit.md/api/v0",
+        REMITMD_API_URL: config.REMITMD_API_URL || "https://remit.md/api/v1",
       },
     })
   exampleConfig:

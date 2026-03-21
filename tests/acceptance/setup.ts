@@ -7,7 +7,7 @@
 
 import { generatePrivateKey } from "viem/accounts";
 
-const API_URL = process.env["ACCEPTANCE_API_URL"] ?? "https://remit.md/api/v0";
+const API_URL = process.env["ACCEPTANCE_API_URL"] ?? "https://remit.md/api/v1";
 const RPC_URL = process.env["ACCEPTANCE_RPC_URL"] ?? "https://sepolia.base.org";
 const USDC_ADDRESS = "0x142aD61B8d2edD6b3807D9266866D97C35Ee0317";
 
