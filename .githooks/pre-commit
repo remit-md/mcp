@@ -1,0 +1,37 @@
+#!/bin/bash
+set -e
+
+echo "=== Pre-commit: remit-mcp ==="
+
+# Type check
+echo "[1/2] tsc --noEmit..."
+npx tsc --noEmit
+
+# Lint
+echo "[2/2] eslint..."
+npx eslint src
+
+# Anti-shortcut checks on staged files
+STAGED=$(git diff --cached --name-only --diff-filter=ACM -- '*.ts')
+if [ -n "$STAGED" ]; then
+    echo "[QA] Anti-shortcut scan..."
+    FAIL=0
+
+    if echo "$STAGED" | xargs grep -n 'TODO\|FIXME\|HACK\|placeholder\|stub' 2>/dev/null; then
+        echo "  FAIL: TODO/FIXME/placeholder found"
+        FAIL=1
+    fi
+
+    if echo "$STAGED" | xargs grep -n ': any\b\|as any\b' 2>/dev/null; then
+        echo "  FAIL: 'any' type found — use proper types"
+        FAIL=1
+    fi
+
+    if [ "$FAIL" -eq 1 ]; then
+        echo ""
+        echo "BLOCKED: Anti-shortcut check failed. Fix issues above."
+        exit 1
+    fi
+fi
+
+echo "=== Pre-commit passed ==="

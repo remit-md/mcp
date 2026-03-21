@@ -408,17 +408,17 @@ describe("x402_pay handler", () => {
         amount: "1000",
         asset: "0x142aD61B8d2edD6b3807D9266866D97C35Ee0317",
         payTo: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
-        resource: "/api/v0/premium",
+        resource: "/api/v1/premium",
         description: "Premium data feed",
         mimeType: "application/json",
       },
     });
-    const result = await callTool("x402_pay", { url: "https://example.com/api/v0/premium" }, mock) as Record<string, unknown>;
+    const result = await callTool("x402_pay", { url: "https://example.com/api/v1/premium" }, mock) as Record<string, unknown>;
     const payment = result["payment"] as Record<string, unknown>;
     assert.ok(payment, "payment field must be present");
     assert.equal(payment["amount"], "1000");
     assert.equal(payment["network"], "eip155:84532");
-    assert.equal(payment["resource"], "/api/v0/premium");
+    assert.equal(payment["resource"], "/api/v1/premium");
     assert.equal(payment["description"], "Premium data feed");
     assert.equal(payment["mimeType"], "application/json");
   });
