@@ -406,7 +406,7 @@ describe("x402_pay handler", () => {
         scheme: "exact",
         network: "eip155:84532",
         amount: "1000",
-        asset: "0x142aD61B8d2edD6b3807D9266866D97C35Ee0317",
+        asset: "0x2d846325766921935f37d5b4478196d3ef93707c",
         payTo: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
         resource: "/api/v1/premium",
         description: "Premium data feed",
@@ -534,12 +534,12 @@ describe("x402_paywall_setup handler", () => {
 
   it("uses default USDC address when asset omitted", async () => {
     const result = await callTool("x402_paywall_setup", { language: "python", ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
-    assert.ok((result["code"] as string).includes("0x142aD61B8d2edD6b3807D9266866D97C35Ee0317"), "must use default USDC");
+    assert.ok((result["code"] as string).includes("0x2d846325766921935f37d5b4478196d3ef93707c"), "must use default USDC");
   });
 
   it("uses default Router address when router_address omitted", async () => {
     const result = await callTool("x402_paywall_setup", { language: "python", ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
-    assert.ok((result["code"] as string).includes("0xb3E96ebE54138d1c0caea00Ae098309C7E0138eC"), "must use default Router");
+    assert.ok((result["code"] as string).includes("0x3120f396ff6a9afc5a9d92e28796082f1429e024"), "must use default Router");
     assert.ok((result["code"] as string).includes("router_address"), "Python code must include router_address param");
   });
 

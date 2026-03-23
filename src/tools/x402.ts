@@ -95,8 +95,8 @@ export const x402ConfigTool: Tool = {
 
 // ─── Default addresses (Base Sepolia) ────────────────────────────────────────
 
-const DEFAULT_USDC = "0x142aD61B8d2edD6b3807D9266866D97C35Ee0317";
-const DEFAULT_ROUTER = "0xb3E96ebE54138d1c0caea00Ae098309C7E0138eC";
+const DEFAULT_USDC = "0x2d846325766921935f37d5b4478196d3ef93707c";
+const DEFAULT_ROUTER = "0x3120f396ff6a9afc5a9d92e28796082f1429e024";
 
 // ─── Code-generation helpers ──────────────────────────────────────────────────
 
@@ -285,7 +285,7 @@ export const x402PaywallSetupTool: Tool = {
           type: "string",
           description:
             "RemitRouter contract address. The agent signs EIP-3009 to this address; the Router deducts the protocol fee and forwards the net amount. " +
-            "Defaults to the Base Sepolia Router (0xb3E96ebE54138d1c0caea00Ae098309C7E0138eC).",
+            "Defaults to the Base Sepolia Router (0x3120f396ff6a9afc5a9d92e28796082f1429e024).",
         },
         amount_usdc: {
           type: "number",
@@ -300,7 +300,7 @@ export const x402PaywallSetupTool: Tool = {
           type: "string",
           description:
             "USDC contract address on the target network. " +
-            "Defaults to 0x142aD61B8d2edD6b3807D9266866D97C35Ee0317 (Base Sepolia USDC) if omitted.",
+            "Defaults to 0x2d846325766921935f37d5b4478196d3ef93707c (Base Sepolia USDC) if omitted.",
         },
         framework: {
           type: "string",
