@@ -32,7 +32,7 @@ import type {
   Invoice,
   Escrow,
   Reputation,
-  RemitEvent,
+  Webhook,
 } from "../src/types.js";
 
 // ── Mock wallet ───────────────────────────────────────────────────────────────
@@ -70,10 +70,14 @@ function makeMockWallet(): WalletLike {
     getTab: async () => ({ tabId: "tab-1", to: OTHER, limit: 100, perUnit: 1, used: 0, status: "open", expiresAt: 9_999_999 } as Tab),
     getBounty: async () => ({ bountyId: "bounty-1", task: "test", amount: 50, status: "open", deadline: 9_999_999 } as Bounty),
     getReputation: async () => ({ address: OTHER, score: 90, completedPayments: 10, tier: "standard" } as Reputation),
-    getEvents: async () => [] as RemitEvent[],
-    x402Fetch: async () => new Response('OK', { status: 200 }),
+    x402Fetch: async () => ({ response: new Response('OK', { status: 200 }), lastPayment: null }),
     createFundLink: async () => ({ url: "https://remit.md/fund/tok", token: "tok", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
     createWithdrawLink: async () => ({ url: "https://remit.md/withdraw/tok", token: "tok", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
+    registerWebhook: async (url, events, chains) => ({
+      id: "wh-1", wallet: ADDR, url, events, chains: chains ?? [], active: true, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z",
+    } as Webhook),
+    listWebhooks: async () => [] as Webhook[],
+    deleteWebhook: async () => {},
   };
 }
 

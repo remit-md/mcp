@@ -11,8 +11,8 @@ import type {
   Deposit,
   Escrow,
   Reputation,
-  RemitEvent,
   Invoice,
+  Webhook,
 } from "../src/types.js";
 
 // ─── Test fixture ─────────────────────────────────────────────────────────────
@@ -79,10 +79,14 @@ function makeMock(): WalletLike {
       ({ bountyId: id, task: "test", amount: 50, status: "open", deadline: 9_999_999 } as Bounty),
     getReputation: async (addr) =>
       ({ address: addr, score: 92, completedPayments: 150, tier: "premium" } as Reputation),
-    getEvents: async () => [] as RemitEvent[],
     x402Fetch: async () => ({ response: new Response('{"data":"paid"}', { status: 200 }), lastPayment: null }),
     createFundLink: async () => ({ url: "https://remit.md/fund/abc", token: "abc", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
     createWithdrawLink: async () => ({ url: "https://remit.md/withdraw/xyz", token: "xyz", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
+    registerWebhook: async (url, events, chains) => ({
+      id: "wh-1", wallet: ADDR, url, events, chains: chains ?? [], active: true, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z",
+    } as Webhook),
+    listWebhooks: async () => [] as Webhook[],
+    deleteWebhook: async () => {},
   };
 }
 
