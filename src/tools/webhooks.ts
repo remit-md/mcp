@@ -16,7 +16,7 @@ export const registerWebhookTool: Tool = {
           type: "array",
           description:
             "Event types to subscribe to. Valid values: payment.sent, payment.received, " +
-            "escrow.funded, escrow.released, escrow.cancelled, tab.opened, tab.charged, " +
+            "escrow.funded, escrow.released, escrow.cancelled, escrow.claim_started, tab.opened, tab.charged, " +
             "tab.closed, stream.opened, stream.withdrawn, stream.closed, bounty.posted, " +
             "bounty.awarded, bounty.expired, deposit.created, deposit.returned, " +
             "deposit.forfeited, x402.settled, x402.failed",

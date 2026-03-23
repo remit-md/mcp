@@ -381,18 +381,18 @@ export const x402PaywallSetupTool: Tool = {
     if (language === "python") {
       const fw = framework ?? "fastapi";
       const v2 = pyV2Lines(resource, description, mime_type);
-      return buildPythonSnippet(wallet_address, routerAddr, amount_usdc, network, usdcAddress, fw, v2);
+      return buildPythonSnippet(wallet_address, routerAddr, amount_usdc, escapePy(network), usdcAddress, fw, v2);
     }
 
     if (language === "typescript") {
       const fw = framework ?? "hono";
       const v2 = tsV2Lines(resource, description, mime_type);
-      return buildTsSnippet(wallet_address, routerAddr, amount_usdc, network, usdcAddress, fw, v2);
+      return buildTsSnippet(wallet_address, routerAddr, amount_usdc, escapeTs(network), usdcAddress, fw, v2);
     }
 
     // go
     const v2 = goV2Lines(resource, description, mime_type);
-    return buildGoSnippet(wallet_address, routerAddr, amount_usdc, network, usdcAddress, v2);
+    return buildGoSnippet(wallet_address, routerAddr, amount_usdc, escapeGo(network), usdcAddress, v2);
   },
 };
 
