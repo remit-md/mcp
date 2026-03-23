@@ -9,7 +9,6 @@ import type {
   Stream,
   Bounty,
   Deposit,
-  Dispute,
   Escrow,
   Reputation,
   Invoice,
@@ -34,7 +33,6 @@ function makeMock(): WalletLike {
     postBounty: async () => ({ bountyId: "b1", task: "test", amount: 20, status: "open", deadline: 9_999_999 } as Bounty),
     awardBounty: async () => TX,
     placeDeposit: async () => ({ depositId: "d1", to: OTHER, amount: 10, status: "locked", expiresAt: 9_999_999 } as Deposit),
-    fileDispute: async () => ({ disputeId: "disp1", invoiceId: "inv1", reason: "r", status: "filed", createdAt: 1_000_000 } as Dispute),
     balance: async () => 250.0,
     status: async () => ({ address: ADDR, usdcBalance: 250.0, tier: "standard", totalVolume: 500, escrowsActive: 0, openTabs: 1, activeStreams: 0 } as WalletStatus),
     getStatus: async (addr) => ({ address: addr, usdcBalance: 88.5, tier: "premium", totalVolume: 2000, escrowsActive: 0, openTabs: 0, activeStreams: 0 } as WalletStatus),
@@ -42,7 +40,7 @@ function makeMock(): WalletLike {
     getEscrow: async (id) => ({ invoiceId: id, from: ADDR, to: OTHER, amount: 75, status: "funded", timeout: 86400 } as Escrow),
     getTab: async (id) => ({ tabId: id, to: OTHER, limit: 50, perUnit: 0.5, used: 10, status: "open", expiresAt: 9_999_999 } as Tab),
     getBounty: async (id) => ({ bountyId: id, task: "find the bug", amount: 20, status: "open", deadline: 9_999_999 } as Bounty),
-    getReputation: async (addr) => ({ address: addr, score: 95, completedPayments: 300, disputes: 1, tier: "elite" } as Reputation),
+    getReputation: async (addr) => ({ address: addr, score: 95, completedPayments: 300, tier: "elite" } as Reputation),
   };
 }
 

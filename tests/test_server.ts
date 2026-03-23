@@ -29,7 +29,6 @@ import type {
   Stream,
   Bounty,
   Deposit,
-  Dispute,
   Invoice,
   Escrow,
   Reputation,
@@ -61,8 +60,6 @@ function makeMockWallet(): WalletLike {
     awardBounty: async () => TX,
     placeDeposit: async () =>
       ({ depositId: "dep-1", to: OTHER, amount: 25, status: "locked", expiresAt: 9_999_999 } as Deposit),
-    fileDispute: async () =>
-      ({ disputeId: "dispute-1", invoiceId: "inv-1", reason: "non_delivery", status: "filed", createdAt: 1_000_000 } as Dispute),
     balance: async () => 500,
     status: async () =>
       ({ address: ADDR, usdcBalance: 500, tier: "standard", totalVolume: 1000, escrowsActive: 0, openTabs: 0, activeStreams: 0 } as WalletStatus),
@@ -72,7 +69,7 @@ function makeMockWallet(): WalletLike {
     getEscrow: async () => ({ invoiceId: "inv-1", from: ADDR, to: OTHER, amount: 10, status: "funded", timeout: 9_999_999 } as Escrow),
     getTab: async () => ({ tabId: "tab-1", to: OTHER, limit: 100, perUnit: 1, used: 0, status: "open", expiresAt: 9_999_999 } as Tab),
     getBounty: async () => ({ bountyId: "bounty-1", task: "test", amount: 50, status: "open", deadline: 9_999_999 } as Bounty),
-    getReputation: async () => ({ address: OTHER, score: 90, completedPayments: 10, disputes: 0, tier: "standard" } as Reputation),
+    getReputation: async () => ({ address: OTHER, score: 90, completedPayments: 10, tier: "standard" } as Reputation),
     getEvents: async () => [] as RemitEvent[],
     x402Fetch: async () => new Response('OK', { status: 200 }),
     createFundLink: async () => ({ url: "https://remit.md/fund/tok", token: "tok", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
