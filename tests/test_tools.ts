@@ -89,8 +89,8 @@ function makeMock(): WalletLike {
 // ─── Schema tests ─────────────────────────────────────────────────────────────
 
 describe("tool registry", () => {
-  it("has exactly 20 tools", () => {
-    assert.equal(ALL_TOOLS.length, 20);
+  it("has exactly 22 tools", () => {
+    assert.equal(ALL_TOOLS.length, 22);
   });
 
   it("all tool names are unique", () => {
@@ -103,6 +103,8 @@ describe("tool registry", () => {
       "pay_direct",
       "create_escrow",
       "release_escrow",
+      "cancel_escrow",
+      "claim_start",
       "open_tab",
       "close_tab",
       "open_stream",

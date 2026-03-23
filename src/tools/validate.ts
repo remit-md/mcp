@@ -65,6 +65,14 @@ export const ReleaseEscrowArgs = z.object({
   invoice_id: nonEmptyString,
 });
 
+export const CancelEscrowArgs = z.object({
+  invoice_id: nonEmptyString,
+});
+
+export const ClaimStartArgs = z.object({
+  invoice_id: nonEmptyString,
+});
+
 export const OpenTabArgs = z.object({
   to: address,
   limit: positiveNumber,
@@ -109,7 +117,10 @@ export const PlaceDepositArgs = z.object({
 });
 
 export const X402PayArgs = z.object({
-  url: z.string().url("must be a valid URL"),
+  url: z
+    .string()
+    .url("must be a valid URL")
+    .refine((u) => u.startsWith("https://"), "x402 URL must use HTTPS"),
   max_usdc: positiveNumber.optional(),
 });
 
@@ -131,9 +142,43 @@ export const X402PaywallSetupArgs = z.object({
   mime_type: z.string().optional(),
 });
 
+// ── Known webhook event types ────────────────────────────────────────────────
+
+const WEBHOOK_EVENT_TYPES = [
+  "payment.sent",
+  "payment.received",
+  "escrow.funded",
+  "escrow.released",
+  "escrow.cancelled",
+  "escrow.claim_started",
+  "tab.opened",
+  "tab.charged",
+  "tab.closed",
+  "stream.opened",
+  "stream.withdrawn",
+  "stream.closed",
+  "bounty.posted",
+  "bounty.awarded",
+  "bounty.expired",
+  "deposit.created",
+  "deposit.returned",
+  "deposit.forfeited",
+  "x402.settled",
+  "x402.failed",
+] as const;
+
+const webhookEventType = z.enum(WEBHOOK_EVENT_TYPES, {
+  errorMap: () => ({
+    message: `must be one of: ${WEBHOOK_EVENT_TYPES.join(", ")}`,
+  }),
+});
+
 export const RegisterWebhookArgs = z.object({
-  url: z.string().url("must be a valid URL"),
-  events: z.array(nonEmptyString).min(1, "must specify at least one event type"),
+  url: z
+    .string()
+    .url("must be a valid URL")
+    .refine((u) => u.startsWith("https://"), "webhook URL must use HTTPS"),
+  events: z.array(webhookEventType).min(1, "must specify at least one event type"),
   chains: z.array(nonEmptyString).optional(),
 });
 
