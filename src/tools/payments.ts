@@ -4,6 +4,8 @@ import {
   PayDirectArgs,
   CreateEscrowArgs,
   ReleaseEscrowArgs,
+  CancelEscrowArgs,
+  ClaimStartArgs,
 } from "./validate.js";
 import { autoPermitFor } from "./permit-helper.js";
 
@@ -91,4 +93,53 @@ export const releaseEscrowTool: Tool = {
   },
 };
 
-export const paymentTools: Tool[] = [payDirectTool, createEscrowTool, releaseEscrowTool];
+export const cancelEscrowTool: Tool = {
+  definition: {
+    name: "cancel_escrow",
+    description:
+      "Cancel a funded escrow and return funds to the payer. " +
+      "Only the payer can cancel, and only before the recipient claims.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        invoice_id: { type: "string", description: "Invoice ID of the escrow to cancel" },
+      },
+      required: ["invoice_id"],
+    },
+  },
+  handler: async (args, wallet) => {
+    const { invoice_id } = parseInput(CancelEscrowArgs, args);
+    const tx = await wallet.cancelEscrow(invoice_id);
+    return { success: true, txHash: tx.txHash, status: tx.status };
+  },
+};
+
+export const claimStartTool: Tool = {
+  definition: {
+    name: "claim_start",
+    description:
+      "Signal that work has started on an escrowed task. " +
+      "Called by the recipient to indicate they have begun working. " +
+      "Prevents the payer from cancelling the escrow.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        invoice_id: { type: "string", description: "Invoice ID of the escrow to claim" },
+      },
+      required: ["invoice_id"],
+    },
+  },
+  handler: async (args, wallet) => {
+    const { invoice_id } = parseInput(ClaimStartArgs, args);
+    const tx = await wallet.claimStart(invoice_id);
+    return { success: true, txHash: tx.txHash, status: tx.status };
+  },
+};
+
+export const paymentTools: Tool[] = [
+  payDirectTool,
+  createEscrowTool,
+  releaseEscrowTool,
+  cancelEscrowTool,
+  claimStartTool,
+];

@@ -83,6 +83,8 @@ const EXPECTED_TOOL_NAMES = [
   "pay_direct",
   "create_escrow",
   "release_escrow",
+  "cancel_escrow",
+  "claim_start",
   "open_tab",
   "close_tab",
   "open_stream",
@@ -126,7 +128,7 @@ describe("MCP server — protocol level", () => {
 
   // ── tools/list ────────────────────────────────────────────────────────────
 
-  it("tools/list returns all 20 registered tools", async () => {
+  it("tools/list returns all 22 registered tools", async () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name);
     assert.equal(tools.length, EXPECTED_TOOL_NAMES.length, `Expected ${EXPECTED_TOOL_NAMES.length} tools, got ${tools.length}: ${names.join(", ")}`);

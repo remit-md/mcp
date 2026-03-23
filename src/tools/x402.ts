@@ -93,34 +93,77 @@ export const x402ConfigTool: Tool = {
   },
 };
 
-// ─── Default addresses (Base Sepolia) ────────────────────────────────────────
+// ─── Default addresses per network ───────────────────────────────────────────
 
-const DEFAULT_USDC = "0x2d846325766921935f37d5b4478196d3ef93707c";
-const DEFAULT_ROUTER = "0x3120f396ff6a9afc5a9d92e28796082f1429e024";
+interface NetworkDefaults {
+  usdc: string;
+  router: string;
+}
+
+const NETWORK_DEFAULTS: Record<string, NetworkDefaults> = {
+  "eip155:8453": {
+    usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    router: "0xAf2e211BC585D3Ab37e9BD546Fb25747a09254D2",
+  },
+  "eip155:84532": {
+    usdc: "0x2d846325766921935f37d5b4478196d3ef93707c",
+    router: "0x3120f396ff6a9afc5a9d92e28796082f1429e024",
+  },
+};
+
+/** Resolve default USDC and Router addresses based on CAIP-2 network string. */
+function getNetworkDefaults(network: string): NetworkDefaults {
+  const defaults = NETWORK_DEFAULTS[network];
+  if (!defaults) {
+    throw new McpError(
+      ErrorCode.InvalidParams,
+      `Unknown network "${network}". Supported: ${Object.keys(NETWORK_DEFAULTS).join(", ")}. ` +
+        "Provide explicit asset and router_address for other networks.",
+    );
+  }
+  return defaults;
+}
+
+// ─── Per-language string escaping (prevents code injection in generated snippets) ─
+
+/** Escape a string for Python string literals (matches repr() for simple strings). */
+function escapePy(s: string): string {
+  return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\r/g, "\\r");
+}
+
+/** Escape a string for TypeScript/JavaScript string literals (JSON.stringify without outer quotes). */
+function escapeTs(s: string): string {
+  return JSON.stringify(s).slice(1, -1);
+}
+
+/** Escape a string for Go string literals (double-quoted). */
+function escapeGo(s: string): string {
+  return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\r/g, "\\r");
+}
 
 // ─── Code-generation helpers ──────────────────────────────────────────────────
 
 function pyV2Lines(resource?: string, description?: string, mimeType?: string): string {
   const lines: string[] = [];
-  if (resource) lines.push(`    resource="${resource}",`);
-  if (description) lines.push(`    description="${description}",`);
-  if (mimeType) lines.push(`    mime_type="${mimeType}",`);
+  if (resource) lines.push(`    resource="${escapePy(resource)}",`);
+  if (description) lines.push(`    description="${escapePy(description)}",`);
+  if (mimeType) lines.push(`    mime_type="${escapePy(mimeType)}",`);
   return lines.length ? "\n" + lines.join("\n") : "";
 }
 
 function tsV2Lines(resource?: string, description?: string, mimeType?: string): string {
   const lines: string[] = [];
-  if (resource) lines.push(`  resource: "${resource}",`);
-  if (description) lines.push(`  description: "${description}",`);
-  if (mimeType) lines.push(`  mimeType: "${mimeType}",`);
+  if (resource) lines.push(`  resource: "${escapeTs(resource)}",`);
+  if (description) lines.push(`  description: "${escapeTs(description)}",`);
+  if (mimeType) lines.push(`  mimeType: "${escapeTs(mimeType)}",`);
   return lines.length ? "\n" + lines.join("\n") : "";
 }
 
 function goV2Lines(resource?: string, description?: string, mimeType?: string): string {
   const lines: string[] = [];
-  if (resource) lines.push(`        Resource: "${resource}",`);
-  if (description) lines.push(`        Description: "${description}",`);
-  if (mimeType) lines.push(`        MimeType: "${mimeType}",`);
+  if (resource) lines.push(`        Resource: "${escapeGo(resource)}",`);
+  if (description) lines.push(`        Description: "${escapeGo(description)}",`);
+  if (mimeType) lines.push(`        MimeType: "${escapeGo(mimeType)}",`);
   return lines.length ? "\n" + lines.join("\n") : "";
 }
 
@@ -329,8 +372,11 @@ export const x402PaywallSetupTool: Tool = {
     const { language, wallet_address, router_address, amount_usdc, network, asset, framework, resource, description, mime_type } =
       parseInput(X402PaywallSetupArgs, args);
 
-    const usdcAddress = asset ?? DEFAULT_USDC;
-    const routerAddr = router_address ?? DEFAULT_ROUTER;
+    // Resolve defaults based on network when asset/router not explicitly provided
+    const needDefaults = !asset || !router_address;
+    const defaults = needDefaults ? getNetworkDefaults(network) : undefined;
+    const usdcAddress = asset ?? defaults!.usdc;
+    const routerAddr = router_address ?? defaults!.router;
 
     if (language === "python") {
       const fw = framework ?? "fastapi";
