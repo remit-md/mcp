@@ -43,6 +43,7 @@ export interface WalletStatus {
   escrowsActive: number;
   openTabs: number;
   activeStreams: number;
+  permitNonce: number | null;
 }
 
 export interface Reputation {
