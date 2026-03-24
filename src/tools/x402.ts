@@ -8,7 +8,7 @@ interface X402Config {
   enabled: boolean;
 }
 
-const x402Config: X402Config = { maxAutoPayUsdc: 0.10, enabled: true };
+const x402Config: X402Config = { maxAutoPayUsdc: 0.10, enabled: false };
 
 export const x402PayTool: Tool = {
   definition: {
@@ -93,35 +93,26 @@ export const x402ConfigTool: Tool = {
   },
 };
 
-// ─── Default addresses per network ───────────────────────────────────────────
+// ─── Contract address resolution ────────────────────────────────────────────
 
-interface NetworkDefaults {
-  usdc: string;
-  router: string;
-}
+import type { WalletLike } from "../types.js";
 
-const NETWORK_DEFAULTS: Record<string, NetworkDefaults> = {
-  "eip155:8453": {
-    usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-    router: "0xAf2e211BC585D3Ab37e9BD546Fb25747a09254D2",
-  },
-  "eip155:84532": {
-    usdc: "0x2d846325766921935f37d5b4478196d3ef93707c",
-    router: "0x3120f396ff6a9afc5a9d92e28796082f1429e024",
-  },
-};
-
-/** Resolve default USDC and Router addresses based on CAIP-2 network string. */
-function getNetworkDefaults(network: string): NetworkDefaults {
-  const defaults = NETWORK_DEFAULTS[network];
-  if (!defaults) {
+/** Fetch USDC and router addresses from the wallet's getContracts() API. */
+async function fetchContractDefaults(wallet: WalletLike): Promise<{ usdc: string; router: string }> {
+  if (!wallet.getContracts) {
     throw new McpError(
-      ErrorCode.InvalidParams,
-      `Unknown network "${network}". Supported: ${Object.keys(NETWORK_DEFAULTS).join(", ")}. ` +
-        "Provide explicit asset and router_address for other networks.",
+      ErrorCode.InvalidRequest,
+      "Wallet does not support getContracts(). Provide explicit asset and router_address.",
     );
   }
-  return defaults;
+  const contracts = await wallet.getContracts();
+  if (!contracts.usdc || !contracts.router) {
+    throw new McpError(
+      ErrorCode.InternalError,
+      "Server returned incomplete contract addresses (missing usdc or router).",
+    );
+  }
+  return { usdc: contracts.usdc, router: contracts.router };
 }
 
 // ─── Per-language string escaping (prevents code injection in generated snippets) ─
@@ -328,7 +319,7 @@ export const x402PaywallSetupTool: Tool = {
           type: "string",
           description:
             "RemitRouter contract address. The agent signs EIP-3009 to this address; the Router deducts the protocol fee and forwards the net amount. " +
-            "Defaults to the Base Sepolia Router (0x3120f396ff6a9afc5a9d92e28796082f1429e024).",
+            "Defaults to the current Router from /contracts API.",
         },
         amount_usdc: {
           type: "number",
@@ -343,7 +334,7 @@ export const x402PaywallSetupTool: Tool = {
           type: "string",
           description:
             "USDC contract address on the target network. " +
-            "Defaults to 0x2d846325766921935f37d5b4478196d3ef93707c (Base Sepolia USDC) if omitted.",
+            "Defaults to the current USDC from /contracts API.",
         },
         framework: {
           type: "string",
@@ -368,13 +359,13 @@ export const x402PaywallSetupTool: Tool = {
       required: ["language", "wallet_address", "amount_usdc", "network"],
     },
   },
-  handler: async (args, _wallet) => {
+  handler: async (args, wallet) => {
     const { language, wallet_address, router_address, amount_usdc, network, asset, framework, resource, description, mime_type } =
       parseInput(X402PaywallSetupArgs, args);
 
-    // Resolve defaults based on network when asset/router not explicitly provided
+    // Resolve defaults from /contracts API when asset/router not explicitly provided
     const needDefaults = !asset || !router_address;
-    const defaults = needDefaults ? getNetworkDefaults(network) : undefined;
+    const defaults = needDefaults ? await fetchContractDefaults(wallet) : undefined;
     const usdcAddress = asset ?? defaults!.usdc;
     const routerAddr = router_address ?? defaults!.router;
 

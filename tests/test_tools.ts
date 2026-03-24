@@ -87,6 +87,16 @@ function makeMock(): WalletLike {
     } as Webhook),
     listWebhooks: async () => [] as Webhook[],
     deleteWebhook: async () => {},
+    getContracts: async () => ({
+      chain_id: 84532,
+      usdc: "0x2d846325766921935f37d5b4478196d3ef93707c",
+      router: "0x3120f396ff6a9afc5a9d92e28796082f1429e024",
+      escrow: "0x47de7cdd757e3765d36c083dab59b2c5a9d249f2",
+      tab: "0x9415f510d8c6199e0f66bde927d7d88de391f5e8",
+      stream: "0x20d413e0eac0f5da3c8630667fd16a94fcd7231a",
+      bounty: "0xb3868471c3034280cce3a56dd37c6154c3bb0b32",
+      deposit: "0x7e0ae37df62e93c1c16a5661a7998bd174331554",
+    }),
   };
 }
 

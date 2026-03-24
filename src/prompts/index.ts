@@ -53,6 +53,16 @@ export function getPrompt(
   name: string,
   args: Record<string, string>,
 ): PromptMessage[] {
+  // Validate required arguments for the requested prompt
+  const def = PROMPT_DEFINITIONS.find((p) => p.name === name);
+  if (def?.arguments) {
+    for (const arg of def.arguments) {
+      if (arg.required && !args[arg.name]) {
+        throw new Error(`Missing required argument: ${arg.name}`);
+      }
+    }
+  }
+
   const task = args["task"] ?? "";
   const budget = args["budget"] ?? "";
   const service = args["service"] ?? "";
