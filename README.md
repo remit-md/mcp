@@ -1,5 +1,7 @@
 # remit.md / mcp
 
+> [Skill MD](https://remit.md) · [Docs](https://remit.md/docs) · [Agent Spec](https://remit.md/agent.md)
+
 MCP server for [remit.md](https://remit.md) — language-agnostic agent payments with zero code.
 
 Any AI agent with MCP support can pay for services, manage escrows, stream funds, and post bounties through natural language.
