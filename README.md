@@ -8,15 +8,41 @@ Any AI agent with MCP support can pay for services, manage escrows, stream funds
 
 ## Quick start
 
+**With OWS (recommended)** — keys stay in an encrypted local vault:
+
 ```json
 {
   "mcpServers": {
-    "remitmd": {
+    "remit": {
       "command": "npx",
       "args": ["@remitmd/mcp-server"],
       "env": {
-        "REMITMD_API_KEY": "your-api-key",
-        "REMITMD_PRIVATE_KEY": "your-wallet-private-key"
+        "OWS_WALLET_ID": "remit-my-agent",
+        "OWS_API_KEY": "$OWS_API_KEY",
+        "REMITMD_CHAIN": "base"
+      }
+    }
+  }
+}
+```
+
+Install OWS and create a wallet with `remit init` (see [remit-cli](https://github.com/remit-md/remit-cli)), or manually:
+
+```bash
+npm install -g @open-wallet-standard/core
+```
+
+**With raw key** — simpler setup, key in env var:
+
+```json
+{
+  "mcpServers": {
+    "remit": {
+      "command": "npx",
+      "args": ["@remitmd/mcp-server"],
+      "env": {
+        "REMITMD_KEY": "0x...",
+        "REMITMD_CHAIN": "base"
       }
     }
   }
