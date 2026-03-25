@@ -37,7 +37,7 @@ export const placeDepositTool: Tool = {
     const { to, amount, expires, permit } = parseInput(PlaceDepositArgs, args);
     const autoSigned = permit ?? (await autoPermitFor(wallet, "deposit", amount));
     const deposit = await wallet.placeDeposit({ to, amount, expires, permit: autoSigned });
-    return { success: true, depositId: deposit.depositId, status: deposit.status };
+    return { success: true, depositId: deposit.id, status: deposit.status };
   },
 };
 

@@ -27,7 +27,7 @@ export const openTabTool: Tool = {
     const tab = await wallet.openTab({ to, limit, perUnit: per_unit, expires, ...(permit ? { permit } : {}) });
     return {
       success: true,
-      tabId: tab.tabId,
+      tabId: tab.id,
       limit: tab.limit,
       perUnit: tab.perUnit,
       expiresAt: tab.expiresAt,

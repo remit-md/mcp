@@ -43,26 +43,26 @@ export const postBountyTool: Tool = {
     const { amount, task, deadline, validation, max_attempts, permit } = parseInput(PostBountyArgs, args);
     const autoSigned = permit ?? (await autoPermitFor(wallet, "bounty", amount));
     const bounty = await wallet.postBounty({ amount, task, deadline, validation, maxAttempts: max_attempts, permit: autoSigned });
-    return { success: true, bountyId: bounty.bountyId, status: bounty.status };
+    return { success: true, bountyId: bounty.id, status: bounty.status };
   },
 };
 
 export const awardBountyTool: Tool = {
   definition: {
     name: "award_bounty",
-    description: "Award a bounty to a specific winner after reviewing their submission.",
+    description: "Award a bounty to a specific submission after reviewing it.",
     inputSchema: {
       type: "object",
       properties: {
         bounty_id: { type: "string", description: "Bounty ID to award" },
-        winner: { type: "string", description: "Winner wallet address (0x...)" },
+        submission_id: { type: "number", description: "Submission index to award (0-based)" },
       },
-      required: ["bounty_id", "winner"],
+      required: ["bounty_id", "submission_id"],
     },
   },
   handler: async (args, wallet) => {
-    const { bounty_id, winner } = parseInput(AwardBountyArgs, args);
-    const tx = await wallet.awardBounty(bounty_id, winner);
+    const { bounty_id, submission_id } = parseInput(AwardBountyArgs, args);
+    const tx = await wallet.awardBounty(bounty_id, submission_id);
     return { success: true, txHash: tx.txHash, status: tx.status };
   },
 };

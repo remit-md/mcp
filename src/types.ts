@@ -1,8 +1,52 @@
 /**
- * Inline type definitions for the MCP server layer.
- * These mirror the @remitmd/sdk types structurally so the server
- * can be tested without importing the SDK package.
+ * Type definitions for the MCP server layer.
+ * Domain model types are re-exported from @remitmd/sdk for type parity.
+ * MCP-specific types (x402, WalletLike, tool infra) are defined here.
  */
+
+// ─── SDK re-exports ─────────────────────────────────────────────────────────
+
+export type {
+  Transaction,
+  WalletStatus,
+  Reputation,
+  Webhook,
+  LinkResponse,
+  ContractAddresses,
+} from "@remitmd/sdk";
+export type { Invoice } from "@remitmd/sdk";
+export type { Escrow } from "@remitmd/sdk";
+export type { Tab } from "@remitmd/sdk";
+export type { Stream } from "@remitmd/sdk";
+export type { Bounty } from "@remitmd/sdk";
+export type { Deposit } from "@remitmd/sdk";
+
+// Import SDK types we need for WalletLike signatures
+import type {
+  Transaction,
+  WalletStatus,
+  Webhook,
+  LinkResponse,
+  ContractAddresses,
+} from "@remitmd/sdk";
+import type { Invoice } from "@remitmd/sdk";
+import type { Escrow } from "@remitmd/sdk";
+import type { Tab } from "@remitmd/sdk";
+import type { Stream } from "@remitmd/sdk";
+import type { Bounty } from "@remitmd/sdk";
+import type { Deposit } from "@remitmd/sdk";
+import type { Reputation } from "@remitmd/sdk";
+import type { CloseTabOptions } from "@remitmd/sdk";
+
+/** Subset of Invoice fields needed by WalletLike.pay(). */
+export interface PayInvoiceInput {
+  to: string;
+  amount: number;
+  paymentType?: Invoice["paymentType"];
+  memo?: string;
+  timeout?: number;
+  milestones?: Array<{ amount: number; description: string }>;
+}
 
 // ─── x402 Types ──────────────────────────────────────────────────────────────
 
@@ -23,107 +67,6 @@ export interface X402PaymentRequired {
 export interface X402FetchResult {
   response: Response;
   lastPayment: X402PaymentRequired | null;
-}
-
-// ─── Domain Types ────────────────────────────────────────────────────────────
-
-export interface Transaction {
-  invoiceId?: string;
-  txHash: string;
-  chain: string;
-  status: string;
-  createdAt: number;
-}
-
-export interface WalletStatus {
-  address: string;
-  usdcBalance: number;
-  tier: string;
-  totalVolume: number;
-  escrowsActive: number;
-  openTabs: number;
-  activeStreams: number;
-  permitNonce: number | null;
-}
-
-export interface Reputation {
-  address: string;
-  score: number;
-  completedPayments: number;
-  tier: string;
-}
-
-export interface Invoice {
-  to: string;
-  amount: number;
-  type: string;
-  memo?: string;
-  timeout?: number;
-  milestones?: Array<{ amount: number; description: string }>;
-}
-
-export interface Escrow {
-  invoiceId: string;
-  from: string;
-  to: string;
-  amount: number;
-  status: string;
-  timeout: number;
-}
-
-export interface Tab {
-  tabId: string;
-  to: string;
-  limit: number;
-  perUnit: number;
-  used: number;
-  status: string;
-  expiresAt: number;
-}
-
-export interface Stream {
-  streamId: string;
-  to: string;
-  rate: number;
-  maxDuration: number;
-  totalStreamed: number;
-  status: string;
-  startedAt: number;
-}
-
-export interface Bounty {
-  bountyId: string;
-  task: string;
-  amount: number;
-  status: string;
-  deadline: number;
-  winner?: string;
-}
-
-export interface Deposit {
-  depositId: string;
-  to: string;
-  amount: number;
-  status: string;
-  expiresAt: number;
-}
-
-export interface Webhook {
-  id: string;
-  wallet: string;
-  url: string;
-  events: string[];
-  chains: string[];
-  active: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface LinkResponse {
-  url: string;
-  token: string;
-  expiresAt: string;
-  walletAddress: string;
 }
 
 // ─── Options ─────────────────────────────────────────────────────────────────
@@ -169,34 +112,22 @@ export interface PlaceDepositOptions {
 
 // ─── WalletLike ───────────────────────────────────────────────────────────────
 
-/** Contract addresses returned by GET /contracts. */
-export interface ContractAddresses {
-  chain_id: number;
-  usdc?: string;
-  router: string;
-  escrow?: string;
-  tab?: string;
-  stream?: string;
-  bounty?: string;
-  deposit?: string;
-}
-
 /** Minimal interface needed by tool and resource handlers. Structurally compatible with @remitmd/sdk Wallet. */
 export interface WalletLike {
   readonly address: string;
 
   // Write operations
   payDirect(to: string, amount: number, memo?: string, options?: { permit?: PermitSignature }): Promise<Transaction>;
-  pay(invoice: Invoice, options?: { permit?: PermitSignature }): Promise<Transaction>;
+  pay(invoice: PayInvoiceInput, options?: { permit?: PermitSignature }): Promise<Escrow>;
   claimStart(invoiceId: string): Promise<Transaction>;
   releaseEscrow(invoiceId: string): Promise<Transaction>;
   cancelEscrow(invoiceId: string): Promise<Transaction>;
   openTab(options: OpenTabOptions & { permit?: PermitSignature }): Promise<Tab>;
-  closeTab(tabId: string): Promise<Transaction>;
+  closeTab(tabId: string, options?: CloseTabOptions): Promise<Transaction>;
   openStream(options: OpenStreamOptions & { permit?: PermitSignature }): Promise<Stream>;
   closeStream(streamId: string): Promise<Transaction>;
   postBounty(options: PostBountyOptions): Promise<Bounty>;
-  awardBounty(bountyId: string, winner: string): Promise<Transaction>;
+  awardBounty(bountyId: string, submissionId: number): Promise<Transaction>;
   placeDeposit(options: PlaceDepositOptions): Promise<Deposit>;
   balance(): Promise<number>;
   status(): Promise<WalletStatus>;

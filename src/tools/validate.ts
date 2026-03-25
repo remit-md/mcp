@@ -106,7 +106,7 @@ export const PostBountyArgs = z.object({
 
 export const AwardBountyArgs = z.object({
   bounty_id: nonEmptyString,
-  winner: address,
+  submission_id: z.number().int("must be an integer").min(0, "must be non-negative"),
 });
 
 export const PlaceDepositArgs = z.object({

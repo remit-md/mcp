@@ -92,7 +92,7 @@ export async function readResource(
   switch (parsed.type) {
     case "balance": {
       const s = await wallet.getStatus(parsed.address);
-      data = { address: parsed.address, balance: s.usdcBalance, currency: "USDC" };
+      data = { address: parsed.address, balance: s.balance, currency: "USDC" };
       break;
     }
     case "reputation": {
