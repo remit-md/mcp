@@ -45,36 +45,37 @@ function makeMockWallet(): WalletLike {
   return {
     address: ADDR,
     payDirect: async () => TX,
-    pay: async () => ({ ...TX, invoiceId: "inv-1" }),
+    pay: async () =>
+      ({ invoiceId: "inv-1", txHash: "0xdeadbeef", payer: ADDR, payee: OTHER, amount: 100, chain: "base", status: "funded", createdAt: 1_000_000 } as Escrow),
     claimStart: async () => TX,
     releaseEscrow: async () => TX,
     cancelEscrow: async () => TX,
     openTab: async () =>
-      ({ tabId: "tab-1", to: OTHER, limit: 100, perUnit: 1, used: 0, status: "open", expiresAt: 9_999_999 } as Tab),
+      ({ id: "tab-1", payer: ADDR, payee: OTHER, limit: 100, perUnit: 1, spent: 0, chain: "base", status: "open", createdAt: 1_000_000, expiresAt: 9_999_999 } as Tab),
     closeTab: async () => TX,
     openStream: async () =>
-      ({ streamId: "stream-1", to: OTHER, rate: 0.001, maxDuration: 3600, totalStreamed: 0, status: "active", startedAt: 1_000_000 } as Stream),
+      ({ id: "stream-1", payer: ADDR, payee: OTHER, ratePerSecond: 0.001, maxDuration: 3600, totalStreamed: 0, chain: "base", status: "active", startedAt: 1_000_000 } as Stream),
     closeStream: async () => TX,
     postBounty: async () =>
-      ({ bountyId: "bounty-1", task: "test task", amount: 50, status: "open", deadline: 9_999_999 } as Bounty),
+      ({ id: "bounty-1", poster: ADDR, task: "test task", amount: 50, chain: "base", status: "open", validation: "poster", maxAttempts: 10, submissions: [], deadline: 9_999_999, createdAt: 1_000_000 } as Bounty),
     awardBounty: async () => TX,
     placeDeposit: async () =>
-      ({ depositId: "dep-1", to: OTHER, amount: 25, status: "locked", expiresAt: 9_999_999 } as Deposit),
+      ({ id: "dep-1", payer: ADDR, payee: OTHER, amount: 25, chain: "base", status: "locked", createdAt: 1_000_000, expiresAt: 9_999_999 } as Deposit),
     balance: async () => 500,
     status: async () =>
-      ({ address: ADDR, usdcBalance: 500, tier: "standard", totalVolume: 1000, escrowsActive: 0, openTabs: 0, activeStreams: 0 } as WalletStatus),
+      ({ wallet: ADDR, balance: "500.00", tier: "standard", monthlyVolume: "1000.00", feeRateBps: 100, activeEscrows: 0, activeTabs: 0, activeStreams: 0, permitNonce: null } as WalletStatus),
     getStatus: async () =>
-      ({ address: OTHER, usdcBalance: 100, tier: "standard", totalVolume: 200, escrowsActive: 0, openTabs: 0, activeStreams: 0 } as WalletStatus),
-    getInvoice: async () => ({ to: OTHER, amount: 10, type: "escrow" } as Invoice),
-    getEscrow: async () => ({ invoiceId: "inv-1", from: ADDR, to: OTHER, amount: 10, status: "funded", timeout: 9_999_999 } as Escrow),
-    getTab: async () => ({ tabId: "tab-1", to: OTHER, limit: 100, perUnit: 1, used: 0, status: "open", expiresAt: 9_999_999 } as Tab),
-    getBounty: async () => ({ bountyId: "bounty-1", task: "test", amount: 50, status: "open", deadline: 9_999_999 } as Bounty),
-    getReputation: async () => ({ address: OTHER, score: 90, completedPayments: 10, tier: "standard" } as Reputation),
+      ({ wallet: OTHER, balance: "100.00", tier: "standard", monthlyVolume: "200.00", feeRateBps: 100, activeEscrows: 0, activeTabs: 0, activeStreams: 0, permitNonce: null } as WalletStatus),
+    getInvoice: async () => ({ id: "inv-1", from: ADDR, to: OTHER, amount: 10, chain: "base", status: "pending", paymentType: "escrow", createdAt: 1_000_000 } as Invoice),
+    getEscrow: async () => ({ invoiceId: "inv-1", payer: ADDR, payee: OTHER, amount: 10, chain: "base", status: "funded", createdAt: 1_000_000 } as Escrow),
+    getTab: async () => ({ id: "tab-1", payer: ADDR, payee: OTHER, limit: 100, perUnit: 1, spent: 0, chain: "base", status: "open", createdAt: 1_000_000, expiresAt: 9_999_999 } as Tab),
+    getBounty: async () => ({ id: "bounty-1", poster: ADDR, task: "test", amount: 50, chain: "base", status: "open", validation: "poster", maxAttempts: 10, submissions: [], deadline: 9_999_999, createdAt: 1_000_000 } as Bounty),
+    getReputation: async () => ({ address: OTHER, score: 90, totalPaid: 5000, totalReceived: 3000, escrowsCompleted: 10, memberSince: 1_000_000 } as Reputation),
     x402Fetch: async () => ({ response: new Response('OK', { status: 200 }), lastPayment: null }),
     createFundLink: async () => ({ url: "https://remit.md/fund/tok", token: "tok", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
     createWithdrawLink: async () => ({ url: "https://remit.md/withdraw/tok", token: "tok", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
     registerWebhook: async (url, events, chains) => ({
-      id: "wh-1", wallet: ADDR, url, events, chains: chains ?? [], active: true, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z",
+      id: "wh-1", wallet: ADDR, url, events, chains: chains ?? [], active: true, createdAt: 1_000_000,
     } as Webhook),
     listWebhooks: async () => [] as Webhook[],
     deleteWebhook: async () => {},

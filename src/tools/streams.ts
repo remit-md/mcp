@@ -28,8 +28,8 @@ export const openStreamTool: Tool = {
     const stream = await wallet.openStream({ to, rate, maxDuration: max_duration, maxTotal: max_total, ...(permit ? { permit } : {}) });
     return {
       success: true,
-      streamId: stream.streamId,
-      rate: stream.rate,
+      streamId: stream.id,
+      rate: stream.ratePerSecond,
       status: stream.status,
     };
   },

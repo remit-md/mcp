@@ -30,12 +30,13 @@ export const getStatusTool: Tool = {
   handler: async (_args, wallet) => {
     const s = await wallet.status();
     return {
-      address: s.address,
-      balance: s.usdcBalance,
+      address: s.wallet,
+      balance: s.balance,
       tier: s.tier,
-      totalVolume: s.totalVolume,
-      activeEscrows: s.escrowsActive,
-      openTabs: s.openTabs,
+      monthlyVolume: s.monthlyVolume,
+      feeRateBps: s.feeRateBps,
+      activeEscrows: s.activeEscrows,
+      activeTabs: s.activeTabs,
       activeStreams: s.activeStreams,
     };
   },

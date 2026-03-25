@@ -22,25 +22,32 @@ function makeMock(): WalletLike {
   return {
     address: ADDR,
     payDirect: async () => TX,
-    pay: async () => TX,
+    pay: async () =>
+      ({ invoiceId: "inv-1", txHash: "0xabc", payer: ADDR, payee: OTHER, amount: 100, chain: "base", status: "funded", createdAt: 1_000_000 } as Escrow),
     claimStart: async () => TX,
     releaseEscrow: async () => TX,
     cancelEscrow: async () => TX,
-    openTab: async () => ({ tabId: "t1", to: OTHER, limit: 50, perUnit: 0.5, used: 10, status: "open", expiresAt: 9_999_999 } as Tab),
+    openTab: async () => ({ id: "t1", payer: ADDR, payee: OTHER, limit: 50, perUnit: 0.5, spent: 10, chain: "base", status: "open", createdAt: 1_000_000, expiresAt: 9_999_999 } as Tab),
     closeTab: async () => TX,
-    openStream: async () => ({ streamId: "s1", to: OTHER, rate: 0.001, maxDuration: 3600, totalStreamed: 1.5, status: "active", startedAt: 1_000_000 } as Stream),
+    openStream: async () => ({ id: "s1", payer: ADDR, payee: OTHER, ratePerSecond: 0.001, maxDuration: 3600, totalStreamed: 1.5, chain: "base", status: "active", startedAt: 1_000_000 } as Stream),
     closeStream: async () => TX,
-    postBounty: async () => ({ bountyId: "b1", task: "test", amount: 20, status: "open", deadline: 9_999_999 } as Bounty),
+    postBounty: async () => ({ id: "b1", poster: ADDR, task: "test", amount: 20, chain: "base", status: "open", validation: "poster", maxAttempts: 10, submissions: [], deadline: 9_999_999, createdAt: 1_000_000 } as Bounty),
     awardBounty: async () => TX,
-    placeDeposit: async () => ({ depositId: "d1", to: OTHER, amount: 10, status: "locked", expiresAt: 9_999_999 } as Deposit),
+    placeDeposit: async () => ({ id: "d1", payer: ADDR, payee: OTHER, amount: 10, chain: "base", status: "locked", createdAt: 1_000_000, expiresAt: 9_999_999 } as Deposit),
     balance: async () => 250.0,
-    status: async () => ({ address: ADDR, usdcBalance: 250.0, tier: "standard", totalVolume: 500, escrowsActive: 0, openTabs: 1, activeStreams: 0 } as WalletStatus),
-    getStatus: async (addr) => ({ address: addr, usdcBalance: 88.5, tier: "premium", totalVolume: 2000, escrowsActive: 0, openTabs: 0, activeStreams: 0 } as WalletStatus),
-    getInvoice: async (id) => ({ to: OTHER, amount: 75, type: "escrow", memo: `task-${id}` } as Invoice),
-    getEscrow: async (id) => ({ invoiceId: id, from: ADDR, to: OTHER, amount: 75, status: "funded", timeout: 86400 } as Escrow),
-    getTab: async (id) => ({ tabId: id, to: OTHER, limit: 50, perUnit: 0.5, used: 10, status: "open", expiresAt: 9_999_999 } as Tab),
-    getBounty: async (id) => ({ bountyId: id, task: "find the bug", amount: 20, status: "open", deadline: 9_999_999 } as Bounty),
-    getReputation: async (addr) => ({ address: addr, score: 95, completedPayments: 300, tier: "elite" } as Reputation),
+    status: async () => ({ wallet: ADDR, balance: "250.00", tier: "standard", monthlyVolume: "500.00", feeRateBps: 100, activeEscrows: 0, activeTabs: 1, activeStreams: 0, permitNonce: null } as WalletStatus),
+    getStatus: async (addr) => ({ wallet: addr, balance: "88.50", tier: "premium", monthlyVolume: "2000.00", feeRateBps: 50, activeEscrows: 0, activeTabs: 0, activeStreams: 0, permitNonce: null } as WalletStatus),
+    getInvoice: async (id) => ({ id, from: ADDR, to: OTHER, amount: 75, chain: "base", status: "pending", paymentType: "escrow", memo: `task-${id}`, createdAt: 1_000_000 } as Invoice),
+    getEscrow: async (id) => ({ invoiceId: id, payer: ADDR, payee: OTHER, amount: 75, chain: "base", status: "funded", createdAt: 1_000_000 } as Escrow),
+    getTab: async (id) => ({ id, payer: ADDR, payee: OTHER, limit: 50, perUnit: 0.5, spent: 10, chain: "base", status: "open", createdAt: 1_000_000, expiresAt: 9_999_999 } as Tab),
+    getBounty: async (id) => ({ id, poster: ADDR, task: "find the bug", amount: 20, chain: "base", status: "open", validation: "poster", maxAttempts: 10, submissions: [], deadline: 9_999_999, createdAt: 1_000_000 } as Bounty),
+    getReputation: async (addr) => ({ address: addr, score: 95, totalPaid: 10000, totalReceived: 8000, escrowsCompleted: 300, memberSince: 1_000_000 } as Reputation),
+    x402Fetch: async () => ({ response: new Response('OK', { status: 200 }), lastPayment: null }),
+    createFundLink: async () => ({ url: "https://remit.md/fund/tok", token: "tok", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
+    createWithdrawLink: async () => ({ url: "https://remit.md/withdraw/tok", token: "tok", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
+    registerWebhook: async () => ({ id: "wh-1", wallet: ADDR, url: "", events: [], chains: [], active: true, createdAt: 1_000_000 }),
+    listWebhooks: async () => [],
+    deleteWebhook: async () => {},
   };
 }
 
@@ -81,7 +88,7 @@ describe("readResource — wallet/balance", () => {
     assert.equal(mimeType, "application/json");
     const data = JSON.parse(text) as Record<string, unknown>;
     assert.equal(data["address"], OTHER);
-    assert.equal(data["balance"], 88.5);
+    assert.equal(data["balance"], "88.50");
     assert.equal(data["currency"], "USDC");
   });
 });
@@ -91,7 +98,6 @@ describe("readResource — wallet/reputation", () => {
     const { text } = await readResource(`remit://wallet/${OTHER}/reputation`, makeMock());
     const data = JSON.parse(text) as Record<string, unknown>;
     assert.equal(data["score"], 95);
-    assert.equal(data["tier"], "elite");
   });
 });
 
@@ -100,7 +106,7 @@ describe("readResource — invoice", () => {
     const { text } = await readResource("remit://invoice/inv-42", makeMock());
     const data = JSON.parse(text) as Record<string, unknown>;
     assert.equal(data["amount"], 75);
-    assert.equal(data["type"], "escrow");
+    assert.equal(data["paymentType"], "escrow");
   });
 });
 
@@ -114,11 +120,11 @@ describe("readResource — escrow/status", () => {
 });
 
 describe("readResource — tab/usage", () => {
-  it("returns tab with used field", async () => {
+  it("returns tab with spent field", async () => {
     const { text } = await readResource("remit://tab/tab-55/usage", makeMock());
     const data = JSON.parse(text) as Record<string, unknown>;
-    assert.equal(data["tabId"], "tab-55");
-    assert.equal(data["used"], 10);
+    assert.equal(data["id"], "tab-55");
+    assert.equal(data["spent"], 10);
   });
 });
 
@@ -126,7 +132,7 @@ describe("readResource — bounty/submissions", () => {
   it("returns bounty data", async () => {
     const { text } = await readResource("remit://bounty/bounty-7/submissions", makeMock());
     const data = JSON.parse(text) as Record<string, unknown>;
-    assert.equal(data["bountyId"], "bounty-7");
+    assert.equal(data["id"], "bounty-7");
     assert.equal(data["task"], "find the bug");
   });
 });

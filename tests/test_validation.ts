@@ -197,12 +197,16 @@ describe("PostBountyArgs", () => {
 
 describe("AwardBountyArgs", () => {
   it("accepts valid args", () => {
-    const result = parseInput(AwardBountyArgs, { bounty_id: "b-1", winner: ADDR });
-    assert.equal(result.winner, ADDR);
+    const result = parseInput(AwardBountyArgs, { bounty_id: "b-1", submission_id: 0 });
+    assert.equal(result.submission_id, 0);
   });
 
-  it("rejects non-address winner", () => {
-    expectInvalidParams(() => parseInput(AwardBountyArgs, { bounty_id: "b-1", winner: "notaddr" }), "winner");
+  it("rejects negative submission_id", () => {
+    expectInvalidParams(() => parseInput(AwardBountyArgs, { bounty_id: "b-1", submission_id: -1 }), "submission_id");
+  });
+
+  it("rejects non-integer submission_id", () => {
+    expectInvalidParams(() => parseInput(AwardBountyArgs, { bounty_id: "b-1", submission_id: 1.5 }), "submission_id");
   });
 });
 

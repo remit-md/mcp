@@ -66,11 +66,11 @@ export const createEscrowTool: Tool = {
   handler: async (args, wallet) => {
     const { to, amount, task, timeout, milestones } = parseInput(CreateEscrowArgs, args);
     const permit = await autoPermitFor(wallet, "escrow", amount);
-    const tx = await wallet.pay(
-      { to, amount, type: "escrow", memo: task, timeout, milestones },
+    const escrow = await wallet.pay(
+      { to, amount, paymentType: "escrow", memo: task, timeout, milestones },
       permit ? { permit } : undefined,
     );
-    return { success: true, invoiceId: tx.invoiceId, txHash: tx.txHash, status: tx.status };
+    return { success: true, invoiceId: escrow.invoiceId, txHash: escrow.txHash, status: escrow.status };
   },
 };
 
