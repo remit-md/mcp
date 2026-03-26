@@ -14,6 +14,10 @@
  *       }
  *     }
  *   }
+ *
+ * Or with OWS (recommended):
+ *
+ *   "env": { "OWS_WALLET_ID": "remit-my-agent", "REMITMD_CHAIN": "base" }
  */
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
