@@ -186,4 +186,4 @@ export const DeleteWebhookArgs = z.object({
   id: nonEmptyString,
 });
 
-// check_balance and get_status take no args — no schema needed.
+// check_balance and get_status take no args - no schema needed.

@@ -2,11 +2,11 @@
  * Key management for the MCP server.
  *
  * Supports three wallet backends (checked in this priority order):
- *   1. HTTP Signer — local signing server.
+ *   1. HTTP Signer - local signing server.
  *      Set REMIT_SIGNER_URL and REMIT_SIGNER_TOKEN.
- *   2. OWS (Open Wallet Standard) — encrypted local vault, policy-gated signing.
+ *   2. OWS (Open Wallet Standard) - encrypted local vault, policy-gated signing.
  *      Set OWS_WALLET_ID (and optionally OWS_API_KEY).
- *   3. Raw private key — set REMITMD_KEY.
+ *   3. Raw private key - set REMITMD_KEY.
  *
  * When multiple are set, the highest-priority backend wins (with a warning).
  * The key/wallet never appears in tool responses, resource contents, or logs.
@@ -46,10 +46,10 @@ export async function createWalletFromEnv(): Promise<WalletLike> {
   let wallet;
 
   if (signerUrl) {
-    // HTTP Signer — highest priority.
+    // HTTP Signer - highest priority.
     if (owsWalletId || remitKey) {
       console.warn(
-        "[remit-mcp] REMIT_SIGNER_URL is set — ignoring " +
+        "[remit-mcp] REMIT_SIGNER_URL is set - ignoring " +
           (owsWalletId ? "OWS_WALLET_ID" : "REMITMD_KEY"),
       );
     }

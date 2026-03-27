@@ -24,7 +24,7 @@ export const registerWebhookTool: Tool = {
         },
         chains: {
           type: "array",
-          description: "Chain filter — omit to receive events from all chains",
+          description: "Chain filter - omit to receive events from all chains",
           items: { type: "string" },
         },
       },

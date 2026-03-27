@@ -5,7 +5,7 @@ export const createFundLinkTool: Tool = {
     name: "create_fund_link",
     description:
       "Generate a one-time URL for the operator to fund this wallet with USDC. " +
-      "Returns a short-lived link that expires in 1 hour. Share with the operator — they open it in a browser to deposit funds.",
+      "Returns a short-lived link that expires in 1 hour. Share with the operator - they open it in a browser to deposit funds.",
     inputSchema: {
       type: "object",
       properties: {},
@@ -27,7 +27,7 @@ export const createWithdrawLinkTool: Tool = {
     name: "create_withdraw_link",
     description:
       "Generate a one-time URL for the operator to withdraw USDC from this wallet. " +
-      "Returns a short-lived link that expires in 1 hour. Share with the operator — they open it in a browser to pull funds out.",
+      "Returns a short-lived link that expires in 1 hour. Share with the operator - they open it in a browser to pull funds out.",
     inputSchema: {
       type: "object",
       properties: {},

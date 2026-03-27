@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * @remitmd/mcp-server — entry point
+ * @remitmd/mcp-server - entry point
  *
  * Starts the MCP server on stdio transport. Configure in claude_desktop_config.json:
  *

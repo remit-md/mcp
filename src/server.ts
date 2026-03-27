@@ -18,7 +18,7 @@ const SERVER_INFO = { name: "@remitmd/mcp-server", version: "0.1.0" };
 
 /**
  * Create and configure the MCP server with all tools, resources, and prompts.
- * The wallet object is captured in closure — the private key never leaves this process.
+ * The wallet object is captured in closure - the private key never leaves this process.
  */
 export function createServer(wallet: WalletLike): Server {
   const server = new Server(SERVER_INFO, {
