@@ -12,13 +12,13 @@ Three wallet modes, checked in priority order:
 
 | Priority | Mode | Env vars | Key storage |
 |----------|------|----------|-------------|
-| 1 | **Local Signer** | `REMIT_SIGNER_URL` + `REMIT_SIGNER_TOKEN` | Signing server (keys never leave the server) |
+| 1 | **CLI Signer** | `REMIT_KEY_PASSWORD` (+ `remit` on PATH) | Encrypted keystore (`~/.remit/keys/default.enc`) |
 | 2 | **OWS** | `OWS_WALLET_ID` | Encrypted local vault |
 | 3 | **Raw key** | `REMITMD_KEY` | Plaintext in env var |
 
 When multiple are set, the highest-priority mode wins.
 
-**With Local Signer** - keys stay on a signing server you control:
+**With CLI Signer** (recommended) - keys encrypted on disk, signing via subprocess:
 
 ```json
 {
@@ -27,8 +27,7 @@ When multiple are set, the highest-priority mode wins.
       "command": "npx",
       "args": ["@remitmd/mcp-server"],
       "env": {
-        "REMIT_SIGNER_URL": "http://127.0.0.1:7402",
-        "REMIT_SIGNER_TOKEN": "$REMIT_SIGNER_TOKEN",
+        "REMIT_KEY_PASSWORD": "your-keystore-password",
         "REMITMD_CHAIN": "base"
       }
     }
@@ -36,7 +35,7 @@ When multiple are set, the highest-priority mode wins.
 }
 ```
 
-Start a signing server with `remit signer start` (see [remit-cli](https://github.com/remit-md/remit-cli)).
+Requires: `remit` CLI installed and a keystore created with `remit signer init`. Set `REMIT_CLI_PATH` to override the CLI binary location (useful when `npx` has a different PATH).
 
 **With OWS** - keys stay in an encrypted local vault:
 
