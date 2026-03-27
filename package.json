@@ -1,6 +1,6 @@
 {
   "name": "@remitmd/mcp-server",
-  "version": "0.1.2",
+  "version": "0.2.1",
   "description": "MCP server for remit.md - enables any MCP-compatible AI agent to make and receive payments",
   "type": "module",
   "bin": {
