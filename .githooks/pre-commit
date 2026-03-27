@@ -23,7 +23,7 @@ if [ -n "$STAGED" ]; then
     fi
 
     if echo "$STAGED" | xargs grep -n ': any\b\|as any\b' 2>/dev/null; then
-        echo "  FAIL: 'any' type found — use proper types"
+        echo "  FAIL: 'any' type found - use proper types"
         FAIL=1
     fi
 

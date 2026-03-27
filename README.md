@@ -2,7 +2,7 @@
 
 > [Skill MD](https://remit.md) · [Docs](https://remit.md/docs) · [Agent Spec](https://remit.md/agent.md)
 
-MCP server for [remit.md](https://remit.md) — language-agnostic agent payments with zero code.
+MCP server for [remit.md](https://remit.md) - language-agnostic agent payments with zero code.
 
 Any AI agent with MCP support can pay for services, manage escrows, stream funds, and post bounties through natural language.
 
@@ -18,7 +18,7 @@ Three wallet modes, checked in priority order:
 
 When multiple are set, the highest-priority mode wins.
 
-**With Local Signer** — keys stay on a signing server you control:
+**With Local Signer** - keys stay on a signing server you control:
 
 ```json
 {
@@ -38,7 +38,7 @@ When multiple are set, the highest-priority mode wins.
 
 Start a signing server with `remit signer start` (see [remit-cli](https://github.com/remit-md/remit-cli)).
 
-**With OWS** — keys stay in an encrypted local vault:
+**With OWS** - keys stay in an encrypted local vault:
 
 ```json
 {
@@ -62,7 +62,7 @@ Install OWS and create a wallet with `remit init` (see [remit-cli](https://githu
 npm install -g @open-wallet-standard/core
 ```
 
-**With raw key** — simpler setup, key in env var:
+**With raw key** - simpler setup, key in env var:
 
 ```json
 {
@@ -88,9 +88,9 @@ Direct payments, escrow (create/release), tabs (open/close), streams (open/close
 Wallet balance, reputation score, transaction history, escrow details, tab details, stream details, protocol status.
 
 **3 Prompts:**
-`hire_agent` — negotiate and pay for agent work.
-`negotiate_price` — compare offers and agree on terms.
-`verify_delivery` — check deliverables before releasing escrow.
+`hire_agent` - negotiate and pay for agent work.
+`negotiate_price` - compare offers and agree on terms.
+`verify_delivery` - check deliverables before releasing escrow.
 
 ## Development
 

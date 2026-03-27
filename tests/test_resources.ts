@@ -79,7 +79,7 @@ describe("listResources", () => {
 
 // ─── readResource ─────────────────────────────────────────────────────────────
 
-describe("readResource — wallet/balance", () => {
+describe("readResource - wallet/balance", () => {
   it("returns JSON with balance field", async () => {
     const { mimeType, text } = await readResource(
       `remit://wallet/${OTHER}/balance`,
@@ -93,7 +93,7 @@ describe("readResource — wallet/balance", () => {
   });
 });
 
-describe("readResource — wallet/reputation", () => {
+describe("readResource - wallet/reputation", () => {
   it("returns reputation with score", async () => {
     const { text } = await readResource(`remit://wallet/${OTHER}/reputation`, makeMock());
     const data = JSON.parse(text) as Record<string, unknown>;
@@ -101,7 +101,7 @@ describe("readResource — wallet/reputation", () => {
   });
 });
 
-describe("readResource — invoice", () => {
+describe("readResource - invoice", () => {
   it("returns invoice data", async () => {
     const { text } = await readResource("remit://invoice/inv-42", makeMock());
     const data = JSON.parse(text) as Record<string, unknown>;
@@ -110,7 +110,7 @@ describe("readResource — invoice", () => {
   });
 });
 
-describe("readResource — escrow/status", () => {
+describe("readResource - escrow/status", () => {
   it("returns escrow with invoiceId", async () => {
     const { text } = await readResource("remit://escrow/inv-99/status", makeMock());
     const data = JSON.parse(text) as Record<string, unknown>;
@@ -119,7 +119,7 @@ describe("readResource — escrow/status", () => {
   });
 });
 
-describe("readResource — tab/usage", () => {
+describe("readResource - tab/usage", () => {
   it("returns tab with spent field", async () => {
     const { text } = await readResource("remit://tab/tab-55/usage", makeMock());
     const data = JSON.parse(text) as Record<string, unknown>;
@@ -128,7 +128,7 @@ describe("readResource — tab/usage", () => {
   });
 });
 
-describe("readResource — bounty/submissions", () => {
+describe("readResource - bounty/submissions", () => {
   it("returns bounty data", async () => {
     const { text } = await readResource("remit://bounty/bounty-7/submissions", makeMock());
     const data = JSON.parse(text) as Record<string, unknown>;
@@ -137,7 +137,7 @@ describe("readResource — bounty/submissions", () => {
   });
 });
 
-describe("readResource — error cases", () => {
+describe("readResource - error cases", () => {
   it("throws on unknown URI scheme", async () => {
     await assert.rejects(
       () => readResource("remit://unknown/path", makeMock()),
@@ -153,7 +153,7 @@ describe("readResource — error cases", () => {
   });
 });
 
-describe("readResource — key isolation", () => {
+describe("readResource - key isolation", () => {
   it("no private key material in any resource response", async () => {
     const uris = [
       `remit://wallet/${ADDR}/balance`,

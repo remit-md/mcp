@@ -1,5 +1,5 @@
 /**
- * MCP acceptance tests — payment tool flows against live Base Sepolia.
+ * MCP acceptance tests - payment tool flows against live Base Sepolia.
  *
  * Run with: npm run test:acceptance
  * These tests are NOT included in the normal test suite.

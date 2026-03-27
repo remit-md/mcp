@@ -1,7 +1,7 @@
 // Protocol-level tests for the MCP server.
 //
 // These tests use the MCP SDK's InMemoryTransport + Client to exercise the
-// server via the actual JSON-RPC protocol layer — not just by calling handler
+// server via the actual JSON-RPC protocol layer - not just by calling handler
 // functions directly.  This verifies:
 //   1. tools/list returns all 12 registered tools
 //   2. tools/call happy-path returns text content with the tool result
@@ -111,7 +111,7 @@ const EXPECTED_TOOL_NAMES = [
 
 // ── Test suite ────────────────────────────────────────────────────────────────
 
-describe("MCP server — protocol level", () => {
+describe("MCP server - protocol level", () => {
   let client: Client;
   let serverTransport: InMemoryTransport;
   let clientTransport: InMemoryTransport;

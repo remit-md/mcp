@@ -302,7 +302,7 @@ export const x402PaywallSetupTool: Tool = {
       "Generate the install command and code snippet to add an x402 micropayment paywall to a service endpoint. " +
       "Use when a service developer wants to charge per-request USDC micropayments. " +
       "Supports Python (FastAPI default, Flask), TypeScript (Hono default, Express), and Go (net/http). " +
-      "Returns { install, code } — paste the install command, then drop the code into your server.",
+      "Returns { install, code } - paste the install command, then drop the code into your server.",
     inputSchema: {
       type: "object",
       properties: {

@@ -63,7 +63,7 @@ export interface X402PaymentRequired {
   mimeType?: string;
 }
 
-/** Return type of x402Fetch — response plus V2 metadata from the PAYMENT-REQUIRED header. */
+/** Return type of x402Fetch - response plus V2 metadata from the PAYMENT-REQUIRED header. */
 export interface X402FetchResult {
   response: Response;
   lastPayment: X402PaymentRequired | null;
@@ -134,7 +134,7 @@ export interface WalletLike {
   createFundLink(): Promise<LinkResponse>;
   createWithdrawLink(): Promise<LinkResponse>;
 
-  // Permit signing (optional — present on real SDK Wallet, absent on mocks)
+  // Permit signing (optional - present on real SDK Wallet, absent on mocks)
   signPermit?(spender: string, amount: number): Promise<PermitSignature>;
   getContracts?(): Promise<ContractAddresses>;
 

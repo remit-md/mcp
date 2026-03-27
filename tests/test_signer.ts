@@ -1,4 +1,4 @@
-// Tests for createWalletFromEnv() — HTTP signer, OWS, and raw key paths.
+// Tests for createWalletFromEnv() - HTTP signer, OWS, and raw key paths.
 //
 // Verifies the env-var detection priority:
 //   1. REMIT_SIGNER_URL + REMIT_SIGNER_TOKEN → HTTP signer (via Wallet.withSigner)
@@ -76,7 +76,7 @@ describe("createWalletFromEnv", () => {
     process.env["REMIT_SIGNER_TOKEN"] = "rmit_sk_test";
 
     // No signer server is running, so this should fail with a connection error
-    // from HttpSigner.create — proving it took the withSigner path.
+    // from HttpSigner.create - proving it took the withSigner path.
     await assert.rejects(createWalletFromEnv(), (err: Error) => {
       assert.match(err.message, /cannot reach signer server|ECONNREFUSED|fetch failed/i);
       return true;
@@ -89,7 +89,7 @@ describe("createWalletFromEnv", () => {
     process.env["OWS_WALLET_ID"] = "test-wallet";
 
     // Should attempt HTTP signer path (not OWS), so we get a connection
-    // error — NOT the OWS-not-installed error.
+    // error - NOT the OWS-not-installed error.
     await assert.rejects(createWalletFromEnv(), (err: Error) => {
       assert.match(err.message, /cannot reach signer server|ECONNREFUSED|fetch failed/i);
       assert.doesNotMatch(err.message, /open-wallet-standard/i);
@@ -104,7 +104,7 @@ describe("createWalletFromEnv", () => {
       "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 
     // Should attempt HTTP signer path (not raw key), so we get a connection
-    // error — NOT a successful wallet from REMITMD_KEY.
+    // error - NOT a successful wallet from REMITMD_KEY.
     await assert.rejects(createWalletFromEnv(), (err: Error) => {
       assert.match(err.message, /cannot reach signer server|ECONNREFUSED|fetch failed/i);
       return true;
@@ -131,7 +131,7 @@ describe("createWalletFromEnv", () => {
       "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 
     // Should attempt OWS path (not fall through to raw key), so we
-    // expect the OWS-not-installed error — NOT a successful wallet.
+    // expect the OWS-not-installed error - NOT a successful wallet.
     await assert.rejects(createWalletFromEnv(), (err: Error) => {
       assert.match(err.message, /open-wallet-standard/i);
       return true;
@@ -141,7 +141,7 @@ describe("createWalletFromEnv", () => {
   // ── Raw key path ───────────────────────────────────────────────────────────
 
   it("creates wallet from REMITMD_KEY", async () => {
-    // Anvil default key #0 — deterministic, safe for tests.
+    // Anvil default key #0 - deterministic, safe for tests.
     process.env["REMITMD_KEY"] =
       "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
     process.env["REMITMD_CHAIN"] = "base-sepolia";
