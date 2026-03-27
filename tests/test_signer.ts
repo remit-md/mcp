@@ -1,19 +1,19 @@
-// Tests for createWalletFromEnv() - HTTP signer, OWS, and raw key paths.
+// Tests for createWalletFromEnv() - CLI signer, OWS, and raw key paths.
 //
 // Verifies the env-var detection priority:
-//   1. REMIT_SIGNER_URL + REMIT_SIGNER_TOKEN → HTTP signer (via Wallet.withSigner)
+//   1. CLI signer — remit on PATH + keystore + REMIT_KEY_PASSWORD
 //   2. OWS_WALLET_ID → OWS signer (via Wallet.withOws)
 //   3. REMITMD_KEY → raw private key (via Wallet.fromEnv)
 //   4. None → clear error mentioning all three options
-//   5. Multiple set → highest priority wins (with warning)
+//   5. REMIT_CLI_PATH → custom CLI binary path
 
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { createWalletFromEnv } from "../src/signer.js";
 
 const ENV_KEYS = [
-  "REMIT_SIGNER_URL",
-  "REMIT_SIGNER_TOKEN",
+  "REMIT_CLI_PATH",
+  "REMIT_KEY_PASSWORD",
   "OWS_WALLET_ID",
   "REMITMD_KEY",
   "REMITMD_CHAIN",
@@ -41,74 +41,48 @@ describe("createWalletFromEnv", () => {
 
   it("throws when no credentials are set", async () => {
     await assert.rejects(createWalletFromEnv(), (err: Error) => {
-      assert.match(err.message, /REMIT_SIGNER_URL/);
-      assert.match(err.message, /OWS_WALLET_ID/);
-      assert.match(err.message, /REMITMD_KEY/);
+      assert.match(err.message, /No signing method/);
       return true;
     });
   });
 
   it("error message includes all three config examples", async () => {
     await assert.rejects(createWalletFromEnv(), (err: Error) => {
-      assert.match(err.message, /REMIT_SIGNER_URL/);
-      assert.match(err.message, /REMIT_SIGNER_TOKEN/);
+      assert.match(err.message, /REMIT_KEY_PASSWORD/);
       assert.match(err.message, /OWS_WALLET_ID/);
       assert.match(err.message, /REMITMD_KEY/);
       assert.match(err.message, /REMITMD_CHAIN/);
+      assert.match(err.message, /remit\.md\/install/);
       return true;
     });
   });
 
-  // ── HTTP Signer path ───────────────────────────────────────────────────────
+  // ── CLI Signer path ────────────────────────────────────────────────────────
 
-  it("throws when REMIT_SIGNER_URL is set without REMIT_SIGNER_TOKEN", async () => {
-    process.env["REMIT_SIGNER_URL"] = "http://127.0.0.1:7402";
+  it("CLI signer is not used when remit binary is missing", async () => {
+    // Set password but point to non-existent CLI — should fall through
+    process.env["REMIT_KEY_PASSWORD"] = "test-password";
+    process.env["REMIT_CLI_PATH"] = "nonexistent-remit-binary-xyz";
 
+    // No OWS or REMITMD_KEY set, so should get the "no signing method" error
     await assert.rejects(createWalletFromEnv(), (err: Error) => {
-      assert.match(err.message, /REMIT_SIGNER_TOKEN/);
-      assert.match(err.message, /required/i);
+      assert.match(err.message, /No signing method/);
       return true;
     });
   });
 
-  it("attempts HTTP signer path when REMIT_SIGNER_URL + TOKEN are set", async () => {
-    process.env["REMIT_SIGNER_URL"] = "http://127.0.0.1:19999";
-    process.env["REMIT_SIGNER_TOKEN"] = "rmit_sk_test";
-
-    // No signer server is running, so this should fail with a connection error
-    // from HttpSigner.create - proving it took the withSigner path.
-    await assert.rejects(createWalletFromEnv(), (err: Error) => {
-      assert.match(err.message, /cannot reach signer server|ECONNREFUSED|fetch failed/i);
-      return true;
-    });
-  });
-
-  it("REMIT_SIGNER_URL takes priority over OWS_WALLET_ID", async () => {
-    process.env["REMIT_SIGNER_URL"] = "http://127.0.0.1:19999";
-    process.env["REMIT_SIGNER_TOKEN"] = "rmit_sk_test";
-    process.env["OWS_WALLET_ID"] = "test-wallet";
-
-    // Should attempt HTTP signer path (not OWS), so we get a connection
-    // error - NOT the OWS-not-installed error.
-    await assert.rejects(createWalletFromEnv(), (err: Error) => {
-      assert.match(err.message, /cannot reach signer server|ECONNREFUSED|fetch failed/i);
-      assert.doesNotMatch(err.message, /open-wallet-standard/i);
-      return true;
-    });
-  });
-
-  it("REMIT_SIGNER_URL takes priority over REMITMD_KEY", async () => {
-    process.env["REMIT_SIGNER_URL"] = "http://127.0.0.1:19999";
-    process.env["REMIT_SIGNER_TOKEN"] = "rmit_sk_test";
+  it("REMIT_CLI_PATH is respected", async () => {
+    // Point to a nonexistent path — CLI detection should fail gracefully
+    process.env["REMIT_CLI_PATH"] = "/nonexistent/path/to/remit";
+    process.env["REMIT_KEY_PASSWORD"] = "test-password";
     process.env["REMITMD_KEY"] =
       "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+    process.env["REMITMD_CHAIN"] = "base-sepolia";
 
-    // Should attempt HTTP signer path (not raw key), so we get a connection
-    // error - NOT a successful wallet from REMITMD_KEY.
-    await assert.rejects(createWalletFromEnv(), (err: Error) => {
-      assert.match(err.message, /cannot reach signer server|ECONNREFUSED|fetch failed/i);
-      return true;
-    });
+    // CLI not found, so should fall through to REMITMD_KEY
+    const wallet = await createWalletFromEnv();
+    assert.equal(typeof wallet.address, "string");
+    assert.ok(wallet.address.startsWith("0x"));
   });
 
   // ── OWS path ───────────────────────────────────────────────────────────────
