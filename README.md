@@ -8,7 +8,37 @@ Any AI agent with MCP support can pay for services, manage escrows, stream funds
 
 ## Quick start
 
-**With OWS (recommended)** — keys stay in an encrypted local vault:
+Three wallet modes, checked in priority order:
+
+| Priority | Mode | Env vars | Key storage |
+|----------|------|----------|-------------|
+| 1 | **Local Signer** | `REMIT_SIGNER_URL` + `REMIT_SIGNER_TOKEN` | Signing server (keys never leave the server) |
+| 2 | **OWS** | `OWS_WALLET_ID` | Encrypted local vault |
+| 3 | **Raw key** | `REMITMD_KEY` | Plaintext in env var |
+
+When multiple are set, the highest-priority mode wins.
+
+**With Local Signer** — keys stay on a signing server you control:
+
+```json
+{
+  "mcpServers": {
+    "remit": {
+      "command": "npx",
+      "args": ["@remitmd/mcp-server"],
+      "env": {
+        "REMIT_SIGNER_URL": "http://127.0.0.1:7402",
+        "REMIT_SIGNER_TOKEN": "$REMIT_SIGNER_TOKEN",
+        "REMITMD_CHAIN": "base"
+      }
+    }
+  }
+}
+```
+
+Start a signing server with `remit signer start` (see [remit-cli](https://github.com/remit-md/remit-cli)).
+
+**With OWS** — keys stay in an encrypted local vault:
 
 ```json
 {
