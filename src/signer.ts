@@ -2,8 +2,9 @@
  * Key management for the MCP server.
  *
  * Supports three wallet backends (checked in this priority order):
- *   1. CLI Signer - `remit sign` subprocess with encrypted keystore.
- *      Requires: `remit` on PATH + `~/.remit/keys/default.enc` + REMIT_KEY_PASSWORD.
+ *   1. CLI Signer - `remit sign` subprocess.
+ *      Keychain: `remit` on PATH + `~/.remit/keys/default.meta` (no password needed).
+ *      Encrypted: `remit` on PATH + `~/.remit/keys/default.enc` + REMIT_KEY_PASSWORD.
  *      Override CLI path with REMIT_CLI_PATH for npx environments.
  *   2. OWS (Open Wallet Standard) - encrypted local vault, policy-gated signing.
  *      Set OWS_WALLET_ID (and optionally OWS_API_KEY).
@@ -25,14 +26,18 @@ import { isWalletLike } from "./types.js";
 const execFileAsync = promisify(execFile);
 
 /**
- * Check all three conditions for CLI signer activation:
+ * Check if the CLI signer is available.
  * 1. CLI binary responds to `--version`
- * 2. Keystore file exists at ~/.remit/keys/default.enc
- * 3. REMIT_KEY_PASSWORD env var is set
+ * 2a. Keychain: ~/.remit/keys/default.meta exists (no password needed)
+ * 2b. Encrypted: ~/.remit/keys/default.enc exists + REMIT_KEY_PASSWORD set
  */
 async function isCliAvailable(cliPath: string): Promise<boolean> {
   try {
     await execFileAsync(cliPath, ["--version"], { timeout: 5000 });
+    // Keychain path: .meta file exists (no password needed)
+    const metaPath = join(homedir(), ".remit", "keys", "default.meta");
+    if (existsSync(metaPath)) return true;
+    // Encrypted file path: .enc + password
     const keystorePath = join(homedir(), ".remit", "keys", "default.enc");
     if (!existsSync(keystorePath)) return false;
     if (!process.env["REMIT_KEY_PASSWORD"]) return false;
