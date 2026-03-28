@@ -1,7 +1,7 @@
 // Tests for createWalletFromEnv() - CLI signer, OWS, and raw key paths.
 //
 // Verifies the env-var detection priority:
-//   1. CLI signer — remit on PATH + keystore + REMIT_KEY_PASSWORD
+//   1. CLI signer — remit on PATH + keystore + REMIT_SIGNER_KEY
 //   2. OWS_WALLET_ID → OWS signer (via Wallet.withOws)
 //   3. REMITMD_KEY → raw private key (via Wallet.fromEnv)
 //   4. None → clear error mentioning all three options
@@ -13,6 +13,7 @@ import { createWalletFromEnv } from "../src/signer.js";
 
 const ENV_KEYS = [
   "REMIT_CLI_PATH",
+  "REMIT_SIGNER_KEY",
   "REMIT_KEY_PASSWORD",
   "OWS_WALLET_ID",
   "REMITMD_KEY",
@@ -61,7 +62,7 @@ describe("createWalletFromEnv", () => {
 
   it("CLI signer is not used when remit binary is missing", async () => {
     // Set password but point to non-existent CLI — should fall through
-    process.env["REMIT_KEY_PASSWORD"] = "test-password";
+    process.env["REMIT_SIGNER_KEY"] = "test-password";
     process.env["REMIT_CLI_PATH"] = "nonexistent-remit-binary-xyz";
 
     // No OWS or REMITMD_KEY set, so should get the "no signing method" error
@@ -74,7 +75,7 @@ describe("createWalletFromEnv", () => {
   it("REMIT_CLI_PATH is respected", async () => {
     // Point to a nonexistent path — CLI detection should fail gracefully
     process.env["REMIT_CLI_PATH"] = "/nonexistent/path/to/remit";
-    process.env["REMIT_KEY_PASSWORD"] = "test-password";
+    process.env["REMIT_SIGNER_KEY"] = "test-password";
     process.env["REMITMD_KEY"] =
       "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
     process.env["REMITMD_CHAIN"] = "base-sepolia";

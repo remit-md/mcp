@@ -17,7 +17,7 @@
  *
  * Or with CLI signer (recommended):
  *
- *   "env": { "REMIT_KEY_PASSWORD": "...", "REMITMD_CHAIN": "base" }
+ *   "env": { "REMIT_SIGNER_KEY": "...", "REMITMD_CHAIN": "base" }
  */
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
