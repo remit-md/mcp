@@ -29,7 +29,7 @@ const execFileAsync = promisify(execFile);
  * Check if the CLI signer is available.
  * 1. CLI binary responds to `--version`
  * 2a. Keychain: ~/.remit/keys/default.meta exists (no password needed)
- * 2b. Encrypted: ~/.remit/keys/default.enc exists + REMIT_KEY_PASSWORD set
+ * 2b. Encrypted: ~/.remit/keys/default.enc exists + REMIT_SIGNER_KEY set (or REMIT_KEY_PASSWORD)
  */
 async function isCliAvailable(cliPath: string): Promise<boolean> {
   try {
