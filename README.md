@@ -12,7 +12,7 @@ Three wallet modes, checked in priority order:
 
 | Priority | Mode | Env vars | Key storage |
 |----------|------|----------|-------------|
-| 1 | **CLI Signer** | `REMIT_KEY_PASSWORD` (+ `remit` on PATH) | Encrypted keystore (`~/.remit/keys/default.enc`) |
+| 1 | **CLI Signer** | `REMIT_SIGNER_KEY` (+ `remit` on PATH) | Encrypted keystore (`~/.remit/keys/default.enc`) |
 | 2 | **OWS** | `OWS_WALLET_ID` | Encrypted local vault |
 | 3 | **Raw key** | `REMITMD_KEY` | Plaintext in env var |
 
@@ -27,7 +27,7 @@ When multiple are set, the highest-priority mode wins.
       "command": "npx",
       "args": ["@remitmd/mcp-server"],
       "env": {
-        "REMIT_KEY_PASSWORD": "your-keystore-password",
+        "REMIT_SIGNER_KEY": "your-keystore-password",
         "REMITMD_CHAIN": "base"
       }
     }

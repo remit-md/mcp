@@ -4,7 +4,7 @@
  * Supports three wallet backends (checked in this priority order):
  *   1. CLI Signer - `remit sign` subprocess.
  *      Keychain: `remit` on PATH + `~/.remit/keys/default.meta` (no password needed).
- *      Encrypted: `remit` on PATH + `~/.remit/keys/default.enc` + REMIT_KEY_PASSWORD.
+ *      Encrypted: `remit` on PATH + `~/.remit/keys/default.enc` + REMIT_SIGNER_KEY (or REMIT_KEY_PASSWORD).
  *      Override CLI path with REMIT_CLI_PATH for npx environments.
  *   2. OWS (Open Wallet Standard) - encrypted local vault, policy-gated signing.
  *      Set OWS_WALLET_ID (and optionally OWS_API_KEY).
@@ -40,7 +40,7 @@ async function isCliAvailable(cliPath: string): Promise<boolean> {
     // Encrypted file path: .enc + password
     const keystorePath = join(homedir(), ".remit", "keys", "default.enc");
     if (!existsSync(keystorePath)) return false;
-    if (!process.env["REMIT_KEY_PASSWORD"]) return false;
+    if (!(process.env["REMIT_SIGNER_KEY"] ?? process.env["REMIT_KEY_PASSWORD"])) return false;
     return true;
   } catch {
     return false;
@@ -97,7 +97,7 @@ export async function createWalletFromEnv(): Promise<WalletLike> {
     throw new Error(
       "No signing method available.\n" +
         "Add to your MCP server configuration:\n\n" +
-        '  CLI:     "env": { "REMIT_KEY_PASSWORD": "...", "REMITMD_CHAIN": "base" }  (requires remit CLI installed)\n' +
+        '  CLI:     "env": { "REMIT_SIGNER_KEY": "...", "REMITMD_CHAIN": "base" }  (requires remit CLI installed)\n' +
         '  OWS:     "env": { "OWS_WALLET_ID": "remit-my-agent", "REMITMD_CHAIN": "base" }\n' +
         '  Raw key: "env": { "REMITMD_KEY": "0x...", "REMITMD_CHAIN": "base" }\n\n' +
         "Install CLI: https://remit.md/install",
