@@ -48,7 +48,7 @@ describe("createWalletFromEnv", () => {
 
   it("error message includes all three config examples", async () => {
     await assert.rejects(createWalletFromEnv(), (err: Error) => {
-      assert.match(err.message, /REMIT_KEY_PASSWORD/);
+      assert.match(err.message, /REMIT_SIGNER_KEY/);
       assert.match(err.message, /OWS_WALLET_ID/);
       assert.match(err.message, /REMITMD_KEY/);
       assert.match(err.message, /REMITMD_CHAIN/);
