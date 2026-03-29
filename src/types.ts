@@ -135,7 +135,7 @@ export interface WalletLike {
   createWithdrawLink(): Promise<LinkResponse>;
 
   // Permit signing (optional - present on real SDK Wallet, absent on mocks)
-  signPermit?(spender: string, amount: number): Promise<PermitSignature>;
+  signPermit?(flow: string, amount: number): Promise<PermitSignature>;
   getContracts?(): Promise<ContractAddresses>;
 
   // x402 micropayment fetch
