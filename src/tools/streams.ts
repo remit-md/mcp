@@ -1,5 +1,5 @@
 import type { Tool } from "../types.js";
-import { parseInput, OpenStreamArgs, CloseStreamArgs } from "./validate.js";
+import { parseInput, OpenStreamArgs, CloseStreamArgs, WithdrawStreamArgs } from "./validate.js";
 import { zodToMcpSchema } from "./schema.js";
 import { autoPermitFor } from "./permit-helper.js";
 
@@ -37,4 +37,17 @@ export const closeStreamTool: Tool = {
   },
 };
 
-export const streamTools: Tool[] = [openStreamTool, closeStreamTool];
+export const withdrawStreamTool: Tool = {
+  definition: {
+    name: "withdraw_stream",
+    description: "Claim all vested funds from a streaming payment (callable by the recipient).",
+    inputSchema: zodToMcpSchema(WithdrawStreamArgs),
+  },
+  handler: async (args, wallet) => {
+    const { stream_id } = parseInput(WithdrawStreamArgs, args);
+    const tx = await wallet.withdrawStream(stream_id);
+    return { success: true, txHash: tx.txHash, status: tx.status };
+  },
+};
+
+export const streamTools: Tool[] = [openStreamTool, withdrawStreamTool, closeStreamTool];

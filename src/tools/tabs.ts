@@ -1,5 +1,5 @@
 import type { Tool } from "../types.js";
-import { parseInput, OpenTabArgs, CloseTabArgs } from "./validate.js";
+import { parseInput, OpenTabArgs, CloseTabArgs, ChargeTabArgs } from "./validate.js";
 import { zodToMcpSchema } from "./schema.js";
 import { autoPermitFor } from "./permit-helper.js";
 
@@ -37,4 +37,23 @@ export const closeTabTool: Tool = {
   },
 };
 
-export const tabTools: Tool[] = [openTabTool, closeTabTool];
+export const chargeTabTool: Tool = {
+  definition: {
+    name: "charge_tab",
+    description:
+      "Charge a metered tab for usage (provider-side). Requires an EIP-712 TabCharge signature from the provider.",
+    inputSchema: zodToMcpSchema(ChargeTabArgs),
+  },
+  handler: async (args, wallet) => {
+    const { tab_id, amount, cumulative, call_count, provider_sig } = parseInput(ChargeTabArgs, args);
+    const charge = await wallet.chargeTab(tab_id, {
+      amount,
+      cumulative,
+      callCount: call_count,
+      providerSig: provider_sig,
+    });
+    return { success: true, tabId: charge.tabId, amount: charge.amount, units: charge.units };
+  },
+};
+
+export const tabTools: Tool[] = [openTabTool, chargeTabTool, closeTabTool];
