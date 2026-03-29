@@ -92,7 +92,8 @@ export async function createWalletFromEnv(): Promise<WalletLike> {
     wallet = await Wallet.withOws({ walletId: owsWalletId });
   } else if (remitKey) {
     // Priority 3: Raw private key (legacy)
-    wallet = Wallet.fromEnv();
+    // Construct directly to avoid SDK's CLI detection in fromEnv()
+    wallet = new Wallet({ privateKey: remitKey as `0x${string}`, testnet: true });
   } else {
     throw new Error(
       "No signing method available.\n" +
