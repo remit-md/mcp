@@ -1,5 +1,5 @@
 import type { Tool } from "../types.js";
-import { parseInput, PostBountyArgs, AwardBountyArgs } from "./validate.js";
+import { parseInput, PostBountyArgs, AwardBountyArgs, SubmitBountyArgs, ReclaimBountyArgs } from "./validate.js";
 import { zodToMcpSchema } from "./schema.js";
 import { autoPermitFor } from "./permit-helper.js";
 
@@ -31,4 +31,31 @@ export const awardBountyTool: Tool = {
   },
 };
 
-export const bountyTools: Tool[] = [postBountyTool, awardBountyTool];
+export const submitBountyTool: Tool = {
+  definition: {
+    name: "submit_bounty",
+    description:
+      "Submit work for an open bounty. Provide evidence of completion (hash + optional URI). The bounty poster reviews and awards.",
+    inputSchema: zodToMcpSchema(SubmitBountyArgs),
+  },
+  handler: async (args, wallet) => {
+    const { bounty_id, evidence_hash, evidence_uri } = parseInput(SubmitBountyArgs, args);
+    const tx = await wallet.submitBounty(bounty_id, evidence_hash, evidence_uri);
+    return { success: true, txHash: tx.txHash, status: tx.status };
+  },
+};
+
+export const reclaimBountyTool: Tool = {
+  definition: {
+    name: "reclaim_bounty",
+    description: "Reclaim funds from an expired bounty that was never awarded (callable by the poster).",
+    inputSchema: zodToMcpSchema(ReclaimBountyArgs),
+  },
+  handler: async (args, wallet) => {
+    const { bounty_id } = parseInput(ReclaimBountyArgs, args);
+    const tx = await wallet.reclaimBounty(bounty_id);
+    return { success: true, txHash: tx.txHash, status: tx.status };
+  },
+};
+
+export const bountyTools: Tool[] = [postBountyTool, submitBountyTool, awardBountyTool, reclaimBountyTool];

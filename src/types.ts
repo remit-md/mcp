@@ -36,7 +36,7 @@ import type { Stream } from "@remitmd/sdk";
 import type { Bounty } from "@remitmd/sdk";
 import type { Deposit } from "@remitmd/sdk";
 import type { Reputation } from "@remitmd/sdk";
-import type { CloseTabOptions } from "@remitmd/sdk";
+import type { CloseTabOptions, ChargeTabOptions, TabCharge } from "@remitmd/sdk";
 
 /** Subset of Invoice fields needed by WalletLike.pay(). */
 export interface PayInvoiceInput {
@@ -110,6 +110,12 @@ export interface PlaceDepositOptions {
   permit?: PermitSignature;
 }
 
+export interface UpdateWebhookOptions {
+  url?: string;
+  events?: string[];
+  active?: boolean;
+}
+
 // ─── WalletLike ───────────────────────────────────────────────────────────────
 
 /** Minimal interface needed by tool and resource handlers. Structurally compatible with @remitmd/sdk Wallet. */
@@ -123,12 +129,19 @@ export interface WalletLike {
   releaseEscrow(invoiceId: string): Promise<Transaction>;
   cancelEscrow(invoiceId: string): Promise<Transaction>;
   openTab(options: OpenTabOptions & { permit?: PermitSignature }): Promise<Tab>;
+  chargeTab(tabId: string, options: ChargeTabOptions): Promise<TabCharge>;
   closeTab(tabId: string, options?: CloseTabOptions): Promise<Transaction>;
   openStream(options: OpenStreamOptions & { permit?: PermitSignature }): Promise<Stream>;
   closeStream(streamId: string): Promise<Transaction>;
+  withdrawStream(streamId: string): Promise<Transaction>;
   postBounty(options: PostBountyOptions): Promise<Bounty>;
+  submitBounty(bountyId: string, evidenceHash: string, evidenceUri?: string): Promise<Transaction>;
   awardBounty(bountyId: string, submissionId: number): Promise<Transaction>;
+  reclaimBounty(bountyId: string): Promise<Transaction>;
   placeDeposit(options: PlaceDepositOptions): Promise<Deposit>;
+  returnDeposit(depositId: string): Promise<Transaction>;
+  forfeitDeposit(depositId: string): Promise<Transaction>;
+  updateWebhook(id: string, options: UpdateWebhookOptions): Promise<Webhook>;
   balance(): Promise<number>;
   status(): Promise<WalletStatus>;
   createFundLink(): Promise<LinkResponse>;
@@ -164,12 +177,19 @@ const WALLET_LIKE_METHODS: ReadonlyArray<keyof WalletLike> = [
   "releaseEscrow",
   "cancelEscrow",
   "openTab",
+  "chargeTab",
   "closeTab",
   "openStream",
   "closeStream",
+  "withdrawStream",
   "postBounty",
+  "submitBounty",
   "awardBounty",
+  "reclaimBounty",
   "placeDeposit",
+  "returnDeposit",
+  "forfeitDeposit",
+  "updateWebhook",
   "balance",
   "status",
   "createFundLink",

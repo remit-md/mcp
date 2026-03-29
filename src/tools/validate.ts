@@ -210,13 +210,16 @@ const WEBHOOK_EVENT_TYPES = [
   "stream.withdrawn",
   "stream.closed",
   "bounty.posted",
+  "bounty.submitted",
   "bounty.awarded",
+  "bounty.reclaimed",
   "bounty.expired",
   "deposit.created",
   "deposit.returned",
   "deposit.forfeited",
   "x402.settled",
   "x402.failed",
+  "webhook.test",
 ] as const;
 
 const webhookEventType = z.enum(WEBHOOK_EVENT_TYPES, {
@@ -234,9 +237,9 @@ export const RegisterWebhookArgs = z.object({
   events: z.array(webhookEventType).min(1, "must specify at least one event type").describe(
     "Event types to subscribe to. Valid values: payment.sent, payment.received, " +
     "escrow.funded, escrow.released, escrow.cancelled, escrow.claim_started, tab.opened, tab.charged, " +
-    "tab.closed, stream.opened, stream.withdrawn, stream.closed, bounty.posted, " +
-    "bounty.awarded, bounty.expired, deposit.created, deposit.returned, " +
-    "deposit.forfeited, x402.settled, x402.failed",
+    "tab.closed, stream.opened, stream.withdrawn, stream.closed, bounty.posted, bounty.submitted, " +
+    "bounty.awarded, bounty.reclaimed, bounty.expired, deposit.created, deposit.returned, " +
+    "deposit.forfeited, x402.settled, x402.failed, webhook.test",
   ),
   chains: z.array(nonEmptyString).optional().describe(
     "Chain filter - omit to receive events from all chains",
@@ -245,6 +248,57 @@ export const RegisterWebhookArgs = z.object({
 
 export const DeleteWebhookArgs = z.object({
   id: nonEmptyString.describe("Webhook ID to delete"),
+});
+
+// ── Charge tab ───────────────────────────────────────────────────────────────
+
+export const ChargeTabArgs = z.object({
+  tab_id: nonEmptyString.describe("Tab ID to charge"),
+  amount: positiveNumber.describe("Amount to charge in USD for this call"),
+  cumulative: positiveNumber.describe("Cumulative amount charged so far (including this charge)"),
+  call_count: positiveInt.describe("Total number of calls/charges so far"),
+  provider_sig: nonEmptyString.describe("Provider's EIP-712 TabCharge signature (hex string)"),
+});
+
+// ── Withdraw stream ──────────────────────────────────────────────────────────
+
+export const WithdrawStreamArgs = z.object({
+  stream_id: nonEmptyString.describe("Stream ID to withdraw vested funds from"),
+});
+
+// ── Submit bounty ────────────────────────────────────────────────────────────
+
+export const SubmitBountyArgs = z.object({
+  bounty_id: nonEmptyString.describe("Bounty ID to submit work for"),
+  evidence_hash: hexBytes32.describe("Hash of the evidence/deliverable (0x-prefixed 32 bytes)"),
+  evidence_uri: z.string().optional().describe("Optional URI pointing to the evidence"),
+});
+
+// ── Reclaim bounty ───────────────────────────────────────────────────────────
+
+export const ReclaimBountyArgs = z.object({
+  bounty_id: nonEmptyString.describe("Bounty ID to reclaim (must be expired)"),
+});
+
+// ── Return deposit ───────────────────────────────────────────────────────────
+
+export const ReturnDepositArgs = z.object({
+  deposit_id: nonEmptyString.describe("Deposit ID to return to the depositor"),
+});
+
+// ── Forfeit deposit ──────────────────────────────────────────────────────────
+
+export const ForfeitDepositArgs = z.object({
+  deposit_id: nonEmptyString.describe("Deposit ID to forfeit (provider keeps the funds)"),
+});
+
+// ── Update webhook ───────────────────────────────────────────────────────────
+
+export const UpdateWebhookArgs = z.object({
+  id: nonEmptyString.describe("Webhook ID to update"),
+  url: z.string().url("must be a valid URL").optional().describe("New webhook URL"),
+  events: z.array(webhookEventType).optional().describe("New list of event types to subscribe to"),
+  active: z.boolean().optional().describe("Enable or disable the webhook"),
 });
 
 // ── No-arg tool schemas (check_balance, get_status, create_fund_link, etc.) ──

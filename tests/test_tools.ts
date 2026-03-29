@@ -7,8 +7,8 @@ import type { Escrow } from "../src/types.js";
 // ─── Schema tests ─────────────────────────────────────────────────────────────
 
 describe("tool registry", () => {
-  it("has exactly 22 tools", () => {
-    assert.equal(ALL_TOOLS.length, 22);
+  it("has exactly 29 tools", () => {
+    assert.equal(ALL_TOOLS.length, 29);
   });
 
   it("all tool names are unique", () => {
@@ -24,12 +24,18 @@ describe("tool registry", () => {
       "cancel_escrow",
       "claim_start",
       "open_tab",
+      "charge_tab",
       "close_tab",
       "open_stream",
+      "withdraw_stream",
       "close_stream",
       "post_bounty",
+      "submit_bounty",
       "award_bounty",
+      "reclaim_bounty",
       "place_deposit",
+      "return_deposit",
+      "forfeit_deposit",
       "check_balance",
       "get_status",
       "x402_pay",
@@ -39,6 +45,7 @@ describe("tool registry", () => {
       "create_withdraw_link",
       "register_webhook",
       "list_webhooks",
+      "update_webhook",
       "delete_webhook",
     ];
     for (const name of expected) {
@@ -589,5 +596,167 @@ describe("delete_webhook handler", () => {
       () => callTool("delete_webhook", { id: "" }, createMockWallet()),
       /InvalidParams|id/i,
     );
+  });
+});
+
+// ─── charge_tab handler ───────────────────────────────────────────────────────
+
+describe("charge_tab handler", () => {
+  it("returns success with charge details", async () => {
+    const result = await callTool("charge_tab", {
+      tab_id: "tab-1",
+      amount: 1,
+      cumulative: 1,
+      call_count: 1,
+      provider_sig: "0xabc123",
+    }, createMockWallet()) as Record<string, unknown>;
+    assert.equal(result["success"], true);
+    assert.equal(result["tabId"], "tab-1");
+    assert.equal(result["amount"], 1);
+  });
+
+  it("passes options correctly to wallet", async () => {
+    let capturedOpts: Record<string, unknown> | undefined;
+    const mock = createMockWallet({
+      chargeTab: async (_id, opts) => {
+        capturedOpts = opts as unknown as Record<string, unknown>;
+        return { tabId: "tab-1", amount: 5, units: 5, chargedAt: 1_000_000 };
+      },
+    });
+    await callTool("charge_tab", {
+      tab_id: "tab-1",
+      amount: 5,
+      cumulative: 15,
+      call_count: 3,
+      provider_sig: "0xsig",
+    }, mock);
+    assert.equal(capturedOpts?.["amount"], 5);
+    assert.equal(capturedOpts?.["cumulative"], 15);
+    assert.equal(capturedOpts?.["callCount"], 3);
+    assert.equal(capturedOpts?.["providerSig"], "0xsig");
+  });
+});
+
+// ─── withdraw_stream handler ──────────────────────────────────────────────────
+
+describe("withdraw_stream handler", () => {
+  it("returns success with txHash", async () => {
+    const result = await callTool("withdraw_stream", { stream_id: "stream-1" }, createMockWallet()) as Record<string, unknown>;
+    assert.equal(result["success"], true);
+    assert.equal(result["txHash"], "0x1234");
+  });
+
+  it("calls wallet.withdrawStream with correct id", async () => {
+    let capturedId: string | undefined;
+    const mock = createMockWallet({
+      withdrawStream: async (id) => { capturedId = id; return TX; },
+    });
+    await callTool("withdraw_stream", { stream_id: "stream-42" }, mock);
+    assert.equal(capturedId, "stream-42");
+  });
+});
+
+// ─── submit_bounty handler ────────────────────────────────────────────────────
+
+describe("submit_bounty handler", () => {
+  it("returns success with txHash", async () => {
+    const result = await callTool("submit_bounty", {
+      bounty_id: "bounty-1",
+      evidence_hash: "0x" + "ab".repeat(32),
+    }, createMockWallet()) as Record<string, unknown>;
+    assert.equal(result["success"], true);
+    assert.equal(result["txHash"], "0x1234");
+  });
+
+  it("passes evidence_uri through", async () => {
+    let capturedUri: string | undefined;
+    const mock = createMockWallet({
+      submitBounty: async (_id, _hash, uri) => { capturedUri = uri; return TX; },
+    });
+    await callTool("submit_bounty", {
+      bounty_id: "bounty-1",
+      evidence_hash: "0x" + "cd".repeat(32),
+      evidence_uri: "https://example.com/proof",
+    }, mock);
+    assert.equal(capturedUri, "https://example.com/proof");
+  });
+});
+
+// ─── reclaim_bounty handler ───────────────────────────────────────────────────
+
+describe("reclaim_bounty handler", () => {
+  it("returns success with txHash", async () => {
+    const result = await callTool("reclaim_bounty", { bounty_id: "bounty-1" }, createMockWallet()) as Record<string, unknown>;
+    assert.equal(result["success"], true);
+    assert.equal(result["txHash"], "0x1234");
+  });
+});
+
+// ─── return_deposit handler ───────────────────────────────────────────────────
+
+describe("return_deposit handler", () => {
+  it("returns success with txHash", async () => {
+    const result = await callTool("return_deposit", { deposit_id: "dep-1" }, createMockWallet()) as Record<string, unknown>;
+    assert.equal(result["success"], true);
+    assert.equal(result["txHash"], "0x1234");
+  });
+
+  it("calls wallet.returnDeposit with correct id", async () => {
+    let capturedId: string | undefined;
+    const mock = createMockWallet({
+      returnDeposit: async (id) => { capturedId = id; return TX; },
+    });
+    await callTool("return_deposit", { deposit_id: "dep-42" }, mock);
+    assert.equal(capturedId, "dep-42");
+  });
+});
+
+// ─── forfeit_deposit handler ──────────────────────────────────────────────────
+
+describe("forfeit_deposit handler", () => {
+  it("returns success with txHash", async () => {
+    const result = await callTool("forfeit_deposit", { deposit_id: "dep-1" }, createMockWallet()) as Record<string, unknown>;
+    assert.equal(result["success"], true);
+    assert.equal(result["txHash"], "0x1234");
+  });
+
+  it("calls wallet.forfeitDeposit with correct id", async () => {
+    let capturedId: string | undefined;
+    const mock = createMockWallet({
+      forfeitDeposit: async (id) => { capturedId = id; return TX; },
+    });
+    await callTool("forfeit_deposit", { deposit_id: "dep-42" }, mock);
+    assert.equal(capturedId, "dep-42");
+  });
+});
+
+// ─── update_webhook handler ───────────────────────────────────────────────────
+
+describe("update_webhook handler", () => {
+  it("returns updated webhook", async () => {
+    const result = await callTool("update_webhook", {
+      id: "wh-1",
+      url: "https://new.example.com/hook",
+      active: false,
+    }, createMockWallet()) as Record<string, unknown>;
+    assert.equal(result["success"], true);
+    assert.equal(result["id"], "wh-1");
+    assert.equal(result["url"], "https://new.example.com/hook");
+    assert.equal(result["active"], false);
+  });
+
+  it("passes events through", async () => {
+    let capturedOpts: Record<string, unknown> | undefined;
+    const mock = createMockWallet({
+      updateWebhook: async (_id, opts) => {
+        capturedOpts = opts as unknown as Record<string, unknown>;
+        return { id: "wh-1", wallet: ADDR, url: "", events: ["payment.sent"], chains: [], active: true, createdAt: 1_000_000 };
+      },
+    });
+    await callTool("update_webhook", {
+      id: "wh-1",
+      events: ["payment.sent", "escrow.funded"],
+    }, mock);
+    assert.deepEqual(capturedOpts?.["events"], ["payment.sent", "escrow.funded"]);
   });
 });

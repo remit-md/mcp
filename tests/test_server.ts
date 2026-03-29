@@ -22,12 +22,18 @@ const EXPECTED_TOOL_NAMES = [
   "cancel_escrow",
   "claim_start",
   "open_tab",
+  "charge_tab",
   "close_tab",
   "open_stream",
+  "withdraw_stream",
   "close_stream",
   "post_bounty",
+  "submit_bounty",
   "award_bounty",
+  "reclaim_bounty",
   "place_deposit",
+  "return_deposit",
+  "forfeit_deposit",
   "check_balance",
   "get_status",
   "x402_pay",
@@ -37,6 +43,7 @@ const EXPECTED_TOOL_NAMES = [
   "create_withdraw_link",
   "register_webhook",
   "list_webhooks",
+  "update_webhook",
   "delete_webhook",
 ];
 
@@ -64,7 +71,7 @@ describe("MCP server - protocol level", () => {
 
   // ── tools/list ────────────────────────────────────────────────────────────
 
-  it("tools/list returns all 22 registered tools", async () => {
+  it("tools/list returns all 29 registered tools", async () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name);
     assert.equal(tools.length, EXPECTED_TOOL_NAMES.length, `Expected ${EXPECTED_TOOL_NAMES.length} tools, got ${tools.length}: ${names.join(", ")}`);

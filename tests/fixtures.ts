@@ -59,6 +59,7 @@ export function createMockWallet(overrides?: Partial<WalletLike>): WalletLike {
         createdAt: 1_000_000,
         expiresAt: 9_999_999,
       }) as Tab,
+    chargeTab: async () => ({ tabId: "tab-1", amount: 1, units: 1, chargedAt: 1_000_000 }),
     closeTab: async () => TX,
     openStream: async () =>
       ({
@@ -73,6 +74,7 @@ export function createMockWallet(overrides?: Partial<WalletLike>): WalletLike {
         startedAt: 1_000_000,
       }) as Stream,
     closeStream: async () => TX,
+    withdrawStream: async () => TX,
     postBounty: async () =>
       ({
         id: "bounty-1",
@@ -87,7 +89,9 @@ export function createMockWallet(overrides?: Partial<WalletLike>): WalletLike {
         deadline: 9_999_999,
         createdAt: 1_000_000,
       }) as Bounty,
+    submitBounty: async () => TX,
     awardBounty: async () => TX,
+    reclaimBounty: async () => TX,
     placeDeposit: async () =>
       ({
         id: "dep-1",
@@ -99,6 +103,8 @@ export function createMockWallet(overrides?: Partial<WalletLike>): WalletLike {
         createdAt: 1_000_000,
         expiresAt: 9_999_999,
       }) as Deposit,
+    returnDeposit: async () => TX,
+    forfeitDeposit: async () => TX,
     balance: async () => 500.0,
     status: async () =>
       ({
@@ -233,6 +239,16 @@ export function createMockWallet(overrides?: Partial<WalletLike>): WalletLike {
       }) as Webhook,
     listWebhooks: async () => [] as Webhook[],
     deleteWebhook: async () => {},
+    updateWebhook: async (id, opts) =>
+      ({
+        id,
+        wallet: ADDR,
+        url: opts.url ?? "https://example.com/hook",
+        events: opts.events ?? ["payment.received"],
+        chains: [],
+        active: opts.active ?? true,
+        createdAt: 1_000_000,
+      }) as Webhook,
     getContracts: async () => ({
       chainId: 84532,
       usdc: "0x2d846325766921935f37d5b4478196d3ef93707c",
