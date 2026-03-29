@@ -1,113 +1,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { ALL_TOOLS, callTool, toolRegistry } from "../src/tools/index.js";
-import type {
-  WalletLike,
-  Transaction,
-  WalletStatus,
-  Tab,
-  Stream,
-  Bounty,
-  Deposit,
-  Escrow,
-  Reputation,
-  Invoice,
-  Webhook,
-} from "../src/types.js";
-
-// ─── Test fixture ─────────────────────────────────────────────────────────────
-
-const ADDR = "0xaaaa000000000000000000000000000000000001";
-const OTHER = "0xbbbb000000000000000000000000000000000002";
-
-const TX: Transaction = { txHash: "0x1234", chain: "base", status: "confirmed", createdAt: 1_000_000 };
-
-function makeMock(): WalletLike {
-  return {
-    address: ADDR,
-    payDirect: async () => TX,
-    pay: async () =>
-      ({ invoiceId: "inv-1", txHash: "0x1234", payer: ADDR, payee: OTHER, amount: 100, chain: "base", status: "funded", createdAt: 1_000_000 } as Escrow),
-    claimStart: async () => TX,
-    releaseEscrow: async () => TX,
-    cancelEscrow: async () => TX,
-    openTab: async () =>
-      ({ id: "tab-1", payer: ADDR, payee: OTHER, limit: 100, perUnit: 1, spent: 0, chain: "base", status: "open", createdAt: 1_000_000, expiresAt: 9_999_999 } as Tab),
-    closeTab: async () => TX,
-    openStream: async () =>
-      ({
-        id: "stream-1",
-        payer: ADDR,
-        payee: OTHER,
-        ratePerSecond: 0.001,
-        maxDuration: 3600,
-        totalStreamed: 0,
-        chain: "base",
-        status: "active",
-        startedAt: 1_000_000,
-      } as Stream),
-    closeStream: async () => TX,
-    postBounty: async () =>
-      ({ id: "bounty-1", poster: ADDR, task: "test", amount: 50, chain: "base", status: "open", validation: "poster", maxAttempts: 10, submissions: [], deadline: 9_999_999, createdAt: 1_000_000 } as Bounty),
-    awardBounty: async () => TX,
-    placeDeposit: async () =>
-      ({ id: "dep-1", payer: ADDR, payee: OTHER, amount: 25, chain: "base", status: "locked", createdAt: 1_000_000, expiresAt: 9_999_999 } as Deposit),
-    balance: async () => 500.0,
-    status: async () =>
-      ({
-        wallet: ADDR,
-        balance: "500.00",
-        tier: "standard",
-        monthlyVolume: "1000.00",
-        feeRateBps: 100,
-        activeEscrows: 1,
-        activeTabs: 2,
-        activeStreams: 1,
-        permitNonce: null,
-      } as WalletStatus),
-    getStatus: async (addr) =>
-      ({
-        wallet: addr,
-        balance: "100.00",
-        tier: "standard",
-        monthlyVolume: "500.00",
-        feeRateBps: 100,
-        activeEscrows: 0,
-        activeTabs: 0,
-        activeStreams: 0,
-        permitNonce: null,
-      } as WalletStatus),
-    getInvoice: async () => ({ id: "inv-1", from: ADDR, to: OTHER, amount: 100, chain: "base", status: "pending", paymentType: "escrow", memo: "test", createdAt: 1_000_000 } as Invoice),
-    getEscrow: async (id) =>
-      ({ invoiceId: id, payer: ADDR, payee: OTHER, amount: 100, chain: "base", status: "funded", createdAt: 1_000_000 } as Escrow),
-    getTab: async (id) =>
-      ({ id, payer: ADDR, payee: OTHER, limit: 100, perUnit: 1, spent: 25, chain: "base", status: "open", createdAt: 1_000_000, expiresAt: 9_999_999 } as Tab),
-    getBounty: async (id) =>
-      ({ id, poster: ADDR, task: "test", amount: 50, chain: "base", status: "open", validation: "poster", maxAttempts: 10, submissions: [], deadline: 9_999_999, createdAt: 1_000_000 } as Bounty),
-    getReputation: async (addr) =>
-      ({ address: addr, score: 92, totalPaid: 5000, totalReceived: 3000, escrowsCompleted: 150, memberSince: 1_000_000 } as Reputation),
-    x402Fetch: async () => ({ response: new Response('{"data":"paid"}', { status: 200 }), lastPayment: null }),
-    createFundLink: async () => ({ url: "https://remit.md/fund/abc", token: "abc", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
-    createWithdrawLink: async () => ({ url: "https://remit.md/withdraw/xyz", token: "xyz", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
-    registerWebhook: async (url, events, chains) => ({
-      id: "wh-1", wallet: ADDR, url, events, chains: chains ?? [], active: true, createdAt: 1_000_000,
-    } as Webhook),
-    listWebhooks: async () => [] as Webhook[],
-    deleteWebhook: async () => {},
-    getContracts: async () => ({
-      chainId: 84532,
-      usdc: "0x2d846325766921935f37d5b4478196d3ef93707c",
-      router: "0x3120f396ff6a9afc5a9d92e28796082f1429e024",
-      escrow: "0x47de7cdd757e3765d36c083dab59b2c5a9d249f2",
-      tab: "0x9415f510d8c6199e0f66bde927d7d88de391f5e8",
-      stream: "0x20d413e0eac0f5da3c8630667fd16a94fcd7231a",
-      bounty: "0xb3868471c3034280cce3a56dd37c6154c3bb0b32",
-      deposit: "0x7e0ae37df62e93c1c16a5661a7998bd174331554",
-      feeCalculator: "0xcce1b8cee59f860578bed3c05fe2a80eea04aafb",
-      keyRegistry: "0xf5ba0baa124885eb88ad225e81a60864d5e43074",
-    }),
-  };
-}
+import { createMockWallet, ADDR, OTHER, TX } from "./fixtures.js";
+import type { Escrow } from "../src/types.js";
 
 // ─── Schema tests ─────────────────────────────────────────────────────────────
 
@@ -176,14 +71,14 @@ describe("tool registry", () => {
 
 describe("pay_direct handler", () => {
   it("returns success with txHash", async () => {
-    const result = await callTool("pay_direct", { to: OTHER, amount: 10, memo: "test" }, makeMock()) as Record<string, unknown>;
+    const result = await callTool("pay_direct", { to: OTHER, amount: 10, memo: "test" }, createMockWallet()) as Record<string, unknown>;
     assert.equal(result["success"], true);
     assert.equal(result["txHash"], "0x1234");
     assert.equal(result["status"], "confirmed");
   });
 
   it("key never appears in result", async () => {
-    const result = JSON.stringify(await callTool("pay_direct", { to: OTHER, amount: 1 }, makeMock()));
+    const result = JSON.stringify(await callTool("pay_direct", { to: OTHER, amount: 1 }, createMockWallet()));
     assert.ok(!result.includes("REMITMD_KEY"), "Key in result");
     assert.ok(!result.includes("privateKey"), "Private key in result");
   });
@@ -194,7 +89,7 @@ describe("create_escrow handler", () => {
     const result = await callTool(
       "create_escrow",
       { to: OTHER, amount: 100, task: "write code", timeout: 86400 },
-      makeMock(),
+      createMockWallet(),
     ) as Record<string, unknown>;
     assert.equal(result["success"], true);
     assert.equal(result["invoiceId"], "inv-1");
@@ -203,11 +98,12 @@ describe("create_escrow handler", () => {
 
   it("passes milestones through", async () => {
     let capturedInvoice: unknown;
-    const mock = makeMock();
-    mock.pay = async (inv) => {
-      capturedInvoice = inv;
-      return { invoiceId: "inv-2", txHash: "0x5678", payer: ADDR, payee: OTHER, amount: 100, chain: "base", status: "funded", createdAt: 1_000_000 } as Escrow;
-    };
+    const mock = createMockWallet({
+      pay: async (inv) => {
+        capturedInvoice = inv;
+        return { invoiceId: "inv-2", txHash: "0x5678", payer: ADDR, payee: OTHER, amount: 100, chain: "base", status: "funded", createdAt: 1_000_000 } as Escrow;
+      },
+    });
     await callTool(
       "create_escrow",
       {
@@ -232,7 +128,7 @@ describe("create_escrow handler", () => {
 
 describe("release_escrow handler", () => {
   it("returns txHash", async () => {
-    const result = await callTool("release_escrow", { invoice_id: "inv-1" }, makeMock()) as Record<string, unknown>;
+    const result = await callTool("release_escrow", { invoice_id: "inv-1" }, createMockWallet()) as Record<string, unknown>;
     assert.equal(result["success"], true);
     assert.equal(result["txHash"], "0x1234");
   });
@@ -240,7 +136,7 @@ describe("release_escrow handler", () => {
 
 describe("open_tab handler", () => {
   it("returns tabId and limit", async () => {
-    const result = await callTool("open_tab", { to: OTHER, limit: 50, per_unit: 0.5 }, makeMock()) as Record<string, unknown>;
+    const result = await callTool("open_tab", { to: OTHER, limit: 50, per_unit: 0.5 }, createMockWallet()) as Record<string, unknown>;
     assert.equal(result["success"], true);
     assert.equal(result["tabId"], "tab-1");
     assert.equal(result["limit"], 100);
@@ -249,14 +145,14 @@ describe("open_tab handler", () => {
 
 describe("close_tab handler", () => {
   it("returns txHash", async () => {
-    const result = await callTool("close_tab", { tab_id: "tab-1" }, makeMock()) as Record<string, unknown>;
+    const result = await callTool("close_tab", { tab_id: "tab-1" }, createMockWallet()) as Record<string, unknown>;
     assert.equal(result["success"], true);
   });
 });
 
 describe("open_stream handler", () => {
   it("returns streamId and rate", async () => {
-    const result = await callTool("open_stream", { to: OTHER, rate: 0.001 }, makeMock()) as Record<string, unknown>;
+    const result = await callTool("open_stream", { to: OTHER, rate: 0.001 }, createMockWallet()) as Record<string, unknown>;
     assert.equal(result["success"], true);
     assert.equal(result["streamId"], "stream-1");
     assert.equal(result["rate"], 0.001);
@@ -265,7 +161,7 @@ describe("open_stream handler", () => {
 
 describe("close_stream handler", () => {
   it("returns txHash", async () => {
-    const result = await callTool("close_stream", { stream_id: "stream-1" }, makeMock()) as Record<string, unknown>;
+    const result = await callTool("close_stream", { stream_id: "stream-1" }, createMockWallet()) as Record<string, unknown>;
     assert.equal(result["success"], true);
   });
 });
@@ -275,7 +171,7 @@ describe("post_bounty handler", () => {
     const result = await callTool(
       "post_bounty",
       { amount: 50, task: "find bug", deadline: 9_999_999 },
-      makeMock(),
+      createMockWallet(),
     ) as Record<string, unknown>;
     assert.equal(result["success"], true);
     assert.equal(result["bountyId"], "bounty-1");
@@ -285,11 +181,12 @@ describe("post_bounty handler", () => {
 describe("award_bounty handler", () => {
   it("passes submission_id through", async () => {
     let capturedSubmissionId: number | undefined;
-    const mock = makeMock();
-    mock.awardBounty = async (_id, submissionId) => {
-      capturedSubmissionId = submissionId;
-      return TX;
-    };
+    const mock = createMockWallet({
+      awardBounty: async (_id, submissionId) => {
+        capturedSubmissionId = submissionId;
+        return TX;
+      },
+    });
     await callTool("award_bounty", { bounty_id: "bounty-1", submission_id: 0 }, mock);
     assert.equal(capturedSubmissionId, 0);
   });
@@ -300,7 +197,7 @@ describe("place_deposit handler", () => {
     const result = await callTool(
       "place_deposit",
       { to: OTHER, amount: 25, expires: 86400 },
-      makeMock(),
+      createMockWallet(),
     ) as Record<string, unknown>;
     assert.equal(result["success"], true);
     assert.equal(result["depositId"], "dep-1");
@@ -309,14 +206,14 @@ describe("place_deposit handler", () => {
 
 describe("check_balance handler", () => {
   it("returns balance and address", async () => {
-    const result = await callTool("check_balance", {}, makeMock()) as Record<string, unknown>;
+    const result = await callTool("check_balance", {}, createMockWallet()) as Record<string, unknown>;
     assert.equal(result["balance"], 500.0);
     assert.equal(result["currency"], "USDC");
     assert.equal(result["address"], ADDR);
   });
 
   it("address field is the wallet address, not a key", async () => {
-    const result = JSON.stringify(await callTool("check_balance", {}, makeMock()));
+    const result = JSON.stringify(await callTool("check_balance", {}, createMockWallet()));
     assert.ok(result.includes(ADDR));
     assert.ok(!result.includes("privateKey"));
   });
@@ -324,7 +221,7 @@ describe("check_balance handler", () => {
 
 describe("get_status handler", () => {
   it("returns full status with tier and counters", async () => {
-    const result = await callTool("get_status", {}, makeMock()) as Record<string, unknown>;
+    const result = await callTool("get_status", {}, createMockWallet()) as Record<string, unknown>;
     assert.equal(result["balance"], "500.00");
     assert.equal(result["tier"], "standard");
     assert.equal(result["activeEscrows"], 1);
@@ -338,16 +235,17 @@ describe("get_status handler", () => {
 describe("error handling", () => {
   it("throws on unknown tool name", async () => {
     await assert.rejects(
-      () => callTool("nonexistent_tool", {}, makeMock()),
+      () => callTool("nonexistent_tool", {}, createMockWallet()),
       /Unknown tool: nonexistent_tool/,
     );
   });
 
   it("propagates wallet errors", async () => {
-    const mock = makeMock();
-    mock.payDirect = async () => {
-      throw new Error("InsufficientBalance");
-    };
+    const mock = createMockWallet({
+      payDirect: async () => {
+        throw new Error("InsufficientBalance");
+      },
+    });
     await assert.rejects(
       () => callTool("pay_direct", { to: OTHER, amount: 9999 }, mock),
       /InsufficientBalance/,
@@ -360,8 +258,8 @@ describe("error handling", () => {
 describe("x402_config handler", () => {
   it("returns current config with defaults", async () => {
     // Reset to defaults first
-    await callTool("x402_config", { max_auto_pay_usdc: 0.10, enabled: true }, makeMock());
-    const result = await callTool("x402_config", {}, makeMock()) as Record<string, unknown>;
+    await callTool("x402_config", { max_auto_pay_usdc: 0.10, enabled: true }, createMockWallet());
+    const result = await callTool("x402_config", {}, createMockWallet()) as Record<string, unknown>;
     assert.equal(result["success"], true);
     const config = result["config"] as Record<string, unknown>;
     assert.equal(config["enabled"], true);
@@ -369,17 +267,17 @@ describe("x402_config handler", () => {
   });
 
   it("updates maxAutoPayUsdc", async () => {
-    const result = await callTool("x402_config", { max_auto_pay_usdc: 0.05 }, makeMock()) as Record<string, unknown>;
+    const result = await callTool("x402_config", { max_auto_pay_usdc: 0.05 }, createMockWallet()) as Record<string, unknown>;
     const config = result["config"] as Record<string, unknown>;
     assert.equal(config["maxAutoPayUsdc"], 0.05);
     // Reset
-    await callTool("x402_config", { max_auto_pay_usdc: 0.10 }, makeMock());
+    await callTool("x402_config", { max_auto_pay_usdc: 0.10 }, createMockWallet());
   });
 
   it("can disable and re-enable auto-pay", async () => {
-    let result = await callTool("x402_config", { enabled: false }, makeMock()) as Record<string, unknown>;
+    let result = await callTool("x402_config", { enabled: false }, createMockWallet()) as Record<string, unknown>;
     assert.equal((result["config"] as Record<string, unknown>)["enabled"], false);
-    result = await callTool("x402_config", { enabled: true }, makeMock()) as Record<string, unknown>;
+    result = await callTool("x402_config", { enabled: true }, createMockWallet()) as Record<string, unknown>;
     assert.equal((result["config"] as Record<string, unknown>)["enabled"], true);
   });
 });
@@ -388,15 +286,16 @@ describe("x402_config handler", () => {
 
 describe("x402_pay handler", () => {
   it("calls wallet.x402Fetch with url and session limit", async () => {
-    await callTool("x402_config", { enabled: true, max_auto_pay_usdc: 0.10 }, makeMock());
-    const mock = makeMock();
+    await callTool("x402_config", { enabled: true, max_auto_pay_usdc: 0.10 }, createMockWallet());
     let capturedUrl: string | undefined;
     let capturedLimit: number | undefined;
-    mock.x402Fetch = async (url, limit) => {
-      capturedUrl = url;
-      capturedLimit = limit;
-      return { response: new Response('{"ok":true}', { status: 200 }), lastPayment: null };
-    };
+    const mock = createMockWallet({
+      x402Fetch: async (url, limit) => {
+        capturedUrl = url;
+        capturedLimit = limit;
+        return { response: new Response('{"ok":true}', { status: 200 }), lastPayment: null };
+      },
+    });
     const result = await callTool("x402_pay", { url: "https://example.com/resource" }, mock) as Record<string, unknown>;
     assert.equal(result["status"], 200);
     assert.equal(result["ok"], true);
@@ -405,40 +304,43 @@ describe("x402_pay handler", () => {
   });
 
   it("uses per-request max_usdc when provided", async () => {
-    await callTool("x402_config", { enabled: true, max_auto_pay_usdc: 0.10 }, makeMock());
-    const mock = makeMock();
+    await callTool("x402_config", { enabled: true, max_auto_pay_usdc: 0.10 }, createMockWallet());
     let capturedLimit: number | undefined;
-    mock.x402Fetch = async (_url, limit) => {
-      capturedLimit = limit;
-      return { response: new Response("data", { status: 200 }), lastPayment: null };
-    };
+    const mock = createMockWallet({
+      x402Fetch: async (_url, limit) => {
+        capturedLimit = limit;
+        return { response: new Response("data", { status: 200 }), lastPayment: null };
+      },
+    });
     await callTool("x402_pay", { url: "https://example.com/resource", max_usdc: 0.50 }, mock);
     assert.equal(capturedLimit, 0.50);
   });
 
   it("returns body text from response", async () => {
-    await callTool("x402_config", { enabled: true }, makeMock());
-    const mock = makeMock();
-    mock.x402Fetch = async () => ({ response: new Response('{"result":"success"}', { status: 200 }), lastPayment: null });
+    await callTool("x402_config", { enabled: true }, createMockWallet());
+    const mock = createMockWallet({
+      x402Fetch: async () => ({ response: new Response('{"result":"success"}', { status: 200 }), lastPayment: null }),
+    });
     const result = await callTool("x402_pay", { url: "https://example.com/resource" }, mock) as Record<string, unknown>;
     assert.equal(result["body"], '{"result":"success"}');
   });
 
   it("includes V2 payment metadata when lastPayment is present", async () => {
-    await callTool("x402_config", { enabled: true }, makeMock());
-    const mock = makeMock();
-    mock.x402Fetch = async () => ({
-      response: new Response('{"ok":true}', { status: 200 }),
-      lastPayment: {
-        scheme: "exact",
-        network: "eip155:84532",
-        amount: "1000",
-        asset: "0x2d846325766921935f37d5b4478196d3ef93707c",
-        payTo: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
-        resource: "/api/v1/premium",
-        description: "Premium data feed",
-        mimeType: "application/json",
-      },
+    await callTool("x402_config", { enabled: true }, createMockWallet());
+    const mock = createMockWallet({
+      x402Fetch: async () => ({
+        response: new Response('{"ok":true}', { status: 200 }),
+        lastPayment: {
+          scheme: "exact",
+          network: "eip155:84532",
+          amount: "1000",
+          asset: "0x2d846325766921935f37d5b4478196d3ef93707c",
+          payTo: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+          resource: "/api/v1/premium",
+          description: "Premium data feed",
+          mimeType: "application/json",
+        },
+      }),
     });
     const result = await callTool("x402_pay", { url: "https://example.com/api/v1/premium" }, mock) as Record<string, unknown>;
     const payment = result["payment"] as Record<string, unknown>;
@@ -451,27 +353,28 @@ describe("x402_pay handler", () => {
   });
 
   it("omits payment field when no x402 payment was made (200 direct)", async () => {
-    await callTool("x402_config", { enabled: true }, makeMock());
-    const mock = makeMock();
-    mock.x402Fetch = async () => ({ response: new Response("ok", { status: 200 }), lastPayment: null });
+    await callTool("x402_config", { enabled: true }, createMockWallet());
+    const mock = createMockWallet({
+      x402Fetch: async () => ({ response: new Response("ok", { status: 200 }), lastPayment: null }),
+    });
     const result = await callTool("x402_pay", { url: "https://example.com/free" }, mock) as Record<string, unknown>;
     assert.equal(result["payment"], undefined, "payment field must be absent when no x402 occurred");
   });
 
   it("throws McpError when auto-pay is disabled", async () => {
-    await callTool("x402_config", { enabled: false }, makeMock());
+    await callTool("x402_config", { enabled: false }, createMockWallet());
     await assert.rejects(
-      () => callTool("x402_pay", { url: "https://example.com/resource" }, makeMock()),
+      () => callTool("x402_pay", { url: "https://example.com/resource" }, createMockWallet()),
       /disabled/,
     );
     // Re-enable for subsequent tests
-    await callTool("x402_config", { enabled: true }, makeMock());
+    await callTool("x402_config", { enabled: true }, createMockWallet());
   });
 
   it("rejects invalid URL", async () => {
-    await callTool("x402_config", { enabled: true }, makeMock());
+    await callTool("x402_config", { enabled: true }, createMockWallet());
     await assert.rejects(
-      () => callTool("x402_pay", { url: "not-a-url" }, makeMock()),
+      () => callTool("x402_pay", { url: "not-a-url" }, createMockWallet()),
       /InvalidParams|url/i,
     );
   });
@@ -481,7 +384,7 @@ describe("x402_pay handler", () => {
 
 describe("create_fund_link handler", () => {
   it("returns url, token, expiresAt, walletAddress", async () => {
-    const result = await callTool("create_fund_link", {}, makeMock()) as Record<string, unknown>;
+    const result = await callTool("create_fund_link", {}, createMockWallet()) as Record<string, unknown>;
     assert.equal(result["url"], "https://remit.md/fund/abc");
     assert.equal(result["token"], "abc");
     assert.equal(result["walletAddress"], ADDR);
@@ -493,7 +396,7 @@ describe("create_fund_link handler", () => {
 
 describe("create_withdraw_link handler", () => {
   it("returns url, token, expiresAt, walletAddress", async () => {
-    const result = await callTool("create_withdraw_link", {}, makeMock()) as Record<string, unknown>;
+    const result = await callTool("create_withdraw_link", {}, createMockWallet()) as Record<string, unknown>;
     assert.equal(result["url"], "https://remit.md/withdraw/xyz");
     assert.equal(result["token"], "xyz");
     assert.equal(result["walletAddress"], ADDR);
@@ -511,7 +414,7 @@ const SETUP_BASE = {
 
 describe("x402_paywall_setup handler", () => {
   it("returns install + code for Python FastAPI (default)", async () => {
-    const result = await callTool("x402_paywall_setup", { language: "python", ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    const result = await callTool("x402_paywall_setup", { language: "python", ...SETUP_BASE }, createMockWallet()) as Record<string, unknown>;
     assert.ok(typeof result["install"] === "string", "install must be a string");
     assert.ok(typeof result["code"] === "string", "code must be a string");
     assert.ok((result["install"] as string).includes("remitmd"), "install must mention remitmd");
@@ -521,25 +424,25 @@ describe("x402_paywall_setup handler", () => {
   });
 
   it("returns Flask code when framework=flask", async () => {
-    const result = await callTool("x402_paywall_setup", { language: "python", framework: "flask", ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    const result = await callTool("x402_paywall_setup", { language: "python", framework: "flask", ...SETUP_BASE }, createMockWallet()) as Record<string, unknown>;
     assert.ok((result["code"] as string).includes("flask_route"), "Flask code must use flask_route");
     assert.ok((result["install"] as string).includes("flask"), "install must mention flask");
   });
 
   it("returns Hono code for TypeScript (default)", async () => {
-    const result = await callTool("x402_paywall_setup", { language: "typescript", ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    const result = await callTool("x402_paywall_setup", { language: "typescript", ...SETUP_BASE }, createMockWallet()) as Record<string, unknown>;
     assert.ok((result["code"] as string).includes("honoMiddleware"), "TS default must use honoMiddleware");
     assert.ok((result["install"] as string).includes("hono"), "install must mention hono");
   });
 
   it("returns Express code when framework=express", async () => {
-    const result = await callTool("x402_paywall_setup", { language: "typescript", framework: "express", ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    const result = await callTool("x402_paywall_setup", { language: "typescript", framework: "express", ...SETUP_BASE }, createMockWallet()) as Record<string, unknown>;
     assert.ok((result["code"] as string).includes("paywall.check"), "Express code must use paywall.check");
     assert.ok((result["install"] as string).includes("express"), "install must mention express");
   });
 
   it("returns Go code", async () => {
-    const result = await callTool("x402_paywall_setup", { language: "go", ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    const result = await callTool("x402_paywall_setup", { language: "go", ...SETUP_BASE }, createMockWallet()) as Record<string, unknown>;
     assert.ok((result["install"] as string).includes("go get"), "Go install must use go get");
     assert.ok((result["code"] as string).includes("NewX402Paywall"), "Go code must use NewX402Paywall");
     assert.ok((result["code"] as string).includes("Middleware"), "Go code must use Middleware");
@@ -552,7 +455,7 @@ describe("x402_paywall_setup handler", () => {
       resource: "/v1/data",
       description: "Market data",
       mime_type: "application/json",
-    }, makeMock()) as Record<string, unknown>;
+    }, createMockWallet()) as Record<string, unknown>;
     const code = result["code"] as string;
     assert.ok(code.includes("/v1/data"), "code must include resource");
     assert.ok(code.includes("Market data"), "code must include description");
@@ -560,32 +463,131 @@ describe("x402_paywall_setup handler", () => {
   });
 
   it("uses default USDC address when asset omitted", async () => {
-    const result = await callTool("x402_paywall_setup", { language: "python", ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    const result = await callTool("x402_paywall_setup", { language: "python", ...SETUP_BASE }, createMockWallet()) as Record<string, unknown>;
     assert.ok((result["code"] as string).includes("0x2d846325766921935f37d5b4478196d3ef93707c"), "must use default USDC");
   });
 
   it("uses default Router address when router_address omitted", async () => {
-    const result = await callTool("x402_paywall_setup", { language: "python", ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    const result = await callTool("x402_paywall_setup", { language: "python", ...SETUP_BASE }, createMockWallet()) as Record<string, unknown>;
     assert.ok((result["code"] as string).includes("0x3120f396ff6a9afc5a9d92e28796082f1429e024"), "must use default Router");
     assert.ok((result["code"] as string).includes("router_address"), "Python code must include router_address param");
   });
 
   it("uses provided router_address when given", async () => {
     const customRouter = "0xABCDEF0123456789ABCDEF0123456789ABCDEF01";
-    const result = await callTool("x402_paywall_setup", { language: "typescript", router_address: customRouter, ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    const result = await callTool("x402_paywall_setup", { language: "typescript", router_address: customRouter, ...SETUP_BASE }, createMockWallet()) as Record<string, unknown>;
     assert.ok((result["code"] as string).includes(customRouter), "must use provided router address");
   });
 
   it("uses provided asset address when given", async () => {
     const customUsdc = "0x1234567890123456789012345678901234567890";
-    const result = await callTool("x402_paywall_setup", { language: "typescript", asset: customUsdc, ...SETUP_BASE }, makeMock()) as Record<string, unknown>;
+    const result = await callTool("x402_paywall_setup", { language: "typescript", asset: customUsdc, ...SETUP_BASE }, createMockWallet()) as Record<string, unknown>;
     assert.ok((result["code"] as string).includes(customUsdc), "must use provided asset address");
   });
 
   it("rejects invalid wallet_address", async () => {
     await assert.rejects(
-      () => callTool("x402_paywall_setup", { language: "python", wallet_address: "not-an-address", amount_usdc: 0.001, network: "eip155:84532" }, makeMock()),
+      () => callTool("x402_paywall_setup", { language: "python", wallet_address: "not-an-address", amount_usdc: 0.001, network: "eip155:84532" }, createMockWallet()),
       /InvalidParams|address/i,
+    );
+  });
+});
+
+// ─── register_webhook handler ─────────────────────────────────────────────────
+
+describe("register_webhook handler", () => {
+  it("returns webhook id and metadata", async () => {
+    const result = await callTool("register_webhook", {
+      url: "https://example.com/webhook",
+      events: ["payment.sent", "escrow.funded"],
+    }, createMockWallet()) as Record<string, unknown>;
+    assert.equal(result["success"], true);
+    assert.equal(result["id"], "wh-1");
+    assert.equal(result["url"], "https://example.com/webhook");
+    assert.deepEqual(result["events"], ["payment.sent", "escrow.funded"]);
+    assert.equal(result["active"], true);
+  });
+
+  it("passes chains through", async () => {
+    let capturedChains: string[] | undefined;
+    const mock = createMockWallet({
+      registerWebhook: async (_url, _events, chains) => {
+        capturedChains = chains;
+        return { id: "wh-2", wallet: ADDR, url: "", events: [], chains: chains ?? [], active: true, createdAt: 1_000_000 };
+      },
+    });
+    await callTool("register_webhook", {
+      url: "https://example.com/webhook",
+      events: ["payment.sent"],
+      chains: ["base"],
+    }, mock);
+    assert.deepEqual(capturedChains, ["base"]);
+  });
+
+  it("rejects HTTP URL", async () => {
+    await assert.rejects(
+      () => callTool("register_webhook", {
+        url: "http://example.com/webhook",
+        events: ["payment.sent"],
+      }, createMockWallet()),
+      /InvalidParams|url/i,
+    );
+  });
+
+  it("rejects invalid event type", async () => {
+    await assert.rejects(
+      () => callTool("register_webhook", {
+        url: "https://example.com/webhook",
+        events: ["invalid.event"],
+      }, createMockWallet()),
+      /InvalidParams|events/i,
+    );
+  });
+
+  it("rejects empty events array", async () => {
+    await assert.rejects(
+      () => callTool("register_webhook", {
+        url: "https://example.com/webhook",
+        events: [],
+      }, createMockWallet()),
+      /InvalidParams|events/i,
+    );
+  });
+});
+
+// ─── list_webhooks handler ────────────────────────────────────────────────────
+
+describe("list_webhooks handler", () => {
+  it("returns webhooks array", async () => {
+    const result = await callTool("list_webhooks", {}, createMockWallet()) as Record<string, unknown>;
+    assert.ok(Array.isArray(result["webhooks"]), "webhooks must be an array");
+  });
+});
+
+// ─── delete_webhook handler ───────────────────────────────────────────────────
+
+describe("delete_webhook handler", () => {
+  it("returns success with id", async () => {
+    const result = await callTool("delete_webhook", { id: "wh-1" }, createMockWallet()) as Record<string, unknown>;
+    assert.equal(result["success"], true);
+    assert.equal(result["id"], "wh-1");
+  });
+
+  it("calls wallet.deleteWebhook with correct id", async () => {
+    let capturedId: string | undefined;
+    const mock = createMockWallet({
+      deleteWebhook: async (id) => {
+        capturedId = id;
+      },
+    });
+    await callTool("delete_webhook", { id: "wh-42" }, mock);
+    assert.equal(capturedId, "wh-42");
+  });
+
+  it("rejects empty id", async () => {
+    await assert.rejects(
+      () => callTool("delete_webhook", { id: "" }, createMockWallet()),
+      /InvalidParams|id/i,
     );
   });
 });

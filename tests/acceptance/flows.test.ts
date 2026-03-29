@@ -161,7 +161,7 @@ describe("MCP acceptance: post_bounty + award_bounty", () => {
 
     const award = (await callTool(
       "award_bounty",
-      { bounty_id: post["bountyId"], winner: submitter.address },
+      { bounty_id: post["bountyId"], submission_id: 0 },
       poster.wallet,
     )) as Record<string, unknown>;
     assert.equal(award["success"], true);

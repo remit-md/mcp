@@ -1,37 +1,24 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
-import type { Tool } from "../types.js";
+import type { Tool, WalletLike } from "../types.js";
 import { parseInput, X402PayArgs, X402ConfigArgs, X402PaywallSetupArgs } from "./validate.js";
+import { zodToMcpSchema } from "./schema.js";
 
 /** Session-level x402 auto-pay configuration (persists for MCP server lifetime). */
-interface X402Config {
+export interface X402Config {
   maxAutoPayUsdc: number;
   enabled: boolean;
 }
 
-const x402Config: X402Config = { maxAutoPayUsdc: 0.10, enabled: false };
+/** Create x402 tools with config captured in closure (no module-level singleton). */
+export function createX402Tools(x402Config: X402Config): Tool[] {
 
-export const x402PayTool: Tool = {
+const x402PayTool: Tool = {
   definition: {
     name: "x402_pay",
     description:
       "Make an HTTP request to a URL, automatically paying any x402 Payment Required (402) response. " +
       "Use when an API charges micropayments per request. Returns the response status and body.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        url: {
-          type: "string",
-          description: "URL to fetch. If the server returns 402, a payment will be made automatically.",
-        },
-        max_usdc: {
-          type: "number",
-          description:
-            "Maximum USDC to auto-pay for this single request (overrides session config). " +
-            "Defaults to the session max set by x402_config.",
-        },
-      },
-      required: ["url"],
-    },
+    inputSchema: zodToMcpSchema(X402PayArgs),
   },
   handler: async (args, wallet) => {
     if (!x402Config.enabled) {
@@ -59,27 +46,14 @@ export const x402PayTool: Tool = {
   },
 };
 
-export const x402ConfigTool: Tool = {
+const x402ConfigTool: Tool = {
   definition: {
     name: "x402_config",
     description:
       "Configure x402 auto-pay settings for this session. " +
       "Set the maximum USDC amount to auto-pay per request, or enable/disable auto-pay entirely. " +
       "Settings persist for the duration of the MCP session.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        max_auto_pay_usdc: {
-          type: "number",
-          description: "Maximum USDC to auto-pay per x402 request (e.g. 0.10). Must be positive.",
-        },
-        enabled: {
-          type: "boolean",
-          description: "Enable or disable x402 auto-pay. Disabled mode blocks all x402_pay calls.",
-        },
-      },
-      required: [],
-    },
+    inputSchema: zodToMcpSchema(X402ConfigArgs),
   },
   handler: async (args, _wallet) => {
     const { max_auto_pay_usdc, enabled } = parseInput(X402ConfigArgs, args);
@@ -94,8 +68,6 @@ export const x402ConfigTool: Tool = {
 };
 
 // ─── Contract address resolution ────────────────────────────────────────────
-
-import type { WalletLike } from "../types.js";
 
 /** Fetch USDC and router addresses from the wallet's getContracts() API. */
 async function fetchContractDefaults(wallet: WalletLike): Promise<{ usdc: string; router: string }> {
@@ -295,7 +267,7 @@ func main() {
   };
 }
 
-export const x402PaywallSetupTool: Tool = {
+const x402PaywallSetupTool: Tool = {
   definition: {
     name: "x402_paywall_setup",
     description:
@@ -303,61 +275,7 @@ export const x402PaywallSetupTool: Tool = {
       "Use when a service developer wants to charge per-request USDC micropayments. " +
       "Supports Python (FastAPI default, Flask), TypeScript (Hono default, Express), and Go (net/http). " +
       "Returns { install, code } - paste the install command, then drop the code into your server.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        language: {
-          type: "string",
-          description: "Programming language: python, typescript, or go.",
-          enum: ["python", "typescript", "go"],
-        },
-        wallet_address: {
-          type: "string",
-          description: "Ethereum wallet address that will receive payments.",
-        },
-        router_address: {
-          type: "string",
-          description:
-            "RemitRouter contract address. The agent signs EIP-3009 to this address; the Router deducts the protocol fee and forwards the net amount. " +
-            "Defaults to the current Router from /contracts API.",
-        },
-        amount_usdc: {
-          type: "number",
-          description: "Price per request in USDC (e.g. 0.001 = 0.1 cents).",
-        },
-        network: {
-          type: "string",
-          description:
-            "CAIP-2 network string. Use eip155:84532 for Base Sepolia (testnet) or eip155:8453 for Base mainnet.",
-        },
-        asset: {
-          type: "string",
-          description:
-            "USDC contract address on the target network. " +
-            "Defaults to the current USDC from /contracts API.",
-        },
-        framework: {
-          type: "string",
-          description:
-            "Web framework. Python: fastapi (default) or flask. TypeScript: hono (default) or express. " +
-            "Go only supports net/http.",
-          enum: ["fastapi", "flask", "hono", "express", "net/http"],
-        },
-        resource: {
-          type: "string",
-          description: "V2 optional: URL path of the resource being gated (e.g. /v1/data).",
-        },
-        description: {
-          type: "string",
-          description: "V2 optional: Human-readable description of what the payment covers.",
-        },
-        mime_type: {
-          type: "string",
-          description: "V2 optional: MIME type of the resource (e.g. application/json).",
-        },
-      },
-      required: ["language", "wallet_address", "amount_usdc", "network"],
-    },
+    inputSchema: zodToMcpSchema(X402PaywallSetupArgs),
   },
   handler: async (args, wallet) => {
     const { language, wallet_address, router_address, amount_usdc, network, asset, framework, resource, description, mime_type } =
@@ -387,4 +305,9 @@ export const x402PaywallSetupTool: Tool = {
   },
 };
 
-export const x402Tools: Tool[] = [x402PayTool, x402ConfigTool, x402PaywallSetupTool];
+return [x402PayTool, x402ConfigTool, x402PaywallSetupTool];
+
+} // end createX402Tools
+
+/** Default x402 tools using a shared module-level config (backward compat for tests). */
+export const x402Tools: Tool[] = createX402Tools({ maxAutoPayUsdc: 0.10, enabled: false });

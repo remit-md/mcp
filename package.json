@@ -12,7 +12,7 @@
     "dev": "tsx src/index.ts",
     "test": "node --import=./node_modules/tsx/dist/esm/index.cjs --test tests/*.ts",
     "test:acceptance": "node --import=./node_modules/tsx/dist/esm/index.cjs --test tests/acceptance/*.test.ts",
-    "test:coverage": "c8 --reporter=text --reporter=lcov --lines 60 --functions 60 --branches 60 node --import=./node_modules/tsx/dist/esm/index.cjs --test tests/*.ts",
+    "test:coverage": "c8 --reporter=text --reporter=lcov --lines 70 --functions 70 --branches 70 node --import=./node_modules/tsx/dist/esm/index.cjs --test tests/*.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src"
   },
@@ -20,7 +20,8 @@
     "@modelcontextprotocol/sdk": "^1.0.0",
     "@remitmd/sdk": "^0.1.7",
     "viem": "^2.0.0",
-    "zod": "^3.0.0"
+    "zod": "^3.0.0",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

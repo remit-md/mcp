@@ -39,9 +39,21 @@ const RESOURCE_DEFINITIONS: ResourceDefinition[] = [
     mimeType: "application/json",
   },
   {
+    uri: "remit://stream/{id}/status",
+    name: "Stream Status",
+    description: "Current state, rate, and total streamed for a payment stream",
+    mimeType: "application/json",
+  },
+  {
     uri: "remit://bounty/{id}/submissions",
     name: "Bounty Submissions",
     description: "Bounty details, status, and submission information",
+    mimeType: "application/json",
+  },
+  {
+    uri: "remit://deposit/{id}/status",
+    name: "Deposit Status",
+    description: "Current state and details of a security deposit",
     mimeType: "application/json",
   },
 ];
@@ -56,7 +68,9 @@ type ParsedUri =
   | { type: "invoice"; id: string }
   | { type: "escrow_status"; id: string }
   | { type: "tab_usage"; id: string }
-  | { type: "bounty_submissions"; id: string };
+  | { type: "stream_status"; id: string }
+  | { type: "bounty_submissions"; id: string }
+  | { type: "deposit_status"; id: string };
 
 function parseUri(uri: string): ParsedUri | null {
   const walletMatch = /^remit:\/\/wallet\/([^/]+)\/(balance|reputation)$/.exec(uri);
@@ -74,8 +88,14 @@ function parseUri(uri: string): ParsedUri | null {
   const tabMatch = /^remit:\/\/tab\/([^/]+)\/usage$/.exec(uri);
   if (tabMatch) return { type: "tab_usage", id: tabMatch[1] as string };
 
+  const streamMatch = /^remit:\/\/stream\/([^/]+)\/status$/.exec(uri);
+  if (streamMatch) return { type: "stream_status", id: streamMatch[1] as string };
+
   const bountyMatch = /^remit:\/\/bounty\/([^/]+)\/submissions$/.exec(uri);
   if (bountyMatch) return { type: "bounty_submissions", id: bountyMatch[1] as string };
+
+  const depositMatch = /^remit:\/\/deposit\/([^/]+)\/status$/.exec(uri);
+  if (depositMatch) return { type: "deposit_status", id: depositMatch[1] as string };
 
   return null;
 }
@@ -111,8 +131,16 @@ export async function readResource(
       data = await wallet.getTab(parsed.id);
       break;
     }
+    case "stream_status": {
+      data = await wallet.getStream(parsed.id);
+      break;
+    }
     case "bounty_submissions": {
       data = await wallet.getBounty(parsed.id);
+      break;
+    }
+    case "deposit_status": {
+      data = await wallet.getDeposit(parsed.id);
       break;
     }
   }
