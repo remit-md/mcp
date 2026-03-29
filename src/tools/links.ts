@@ -1,4 +1,6 @@
 import type { Tool } from "../types.js";
+import { zodToMcpSchema } from "./schema.js";
+import { EmptyArgs } from "./validate.js";
 
 export const createFundLinkTool: Tool = {
   definition: {
@@ -6,10 +8,7 @@ export const createFundLinkTool: Tool = {
     description:
       "Generate a one-time URL for the operator to fund this wallet with USDC. " +
       "Returns a short-lived link that expires in 1 hour. Share with the operator - they open it in a browser to deposit funds.",
-    inputSchema: {
-      type: "object",
-      properties: {},
-    },
+    inputSchema: zodToMcpSchema(EmptyArgs),
   },
   handler: async (_args, wallet) => {
     const link = await wallet.createFundLink();
@@ -28,10 +27,7 @@ export const createWithdrawLinkTool: Tool = {
     description:
       "Generate a one-time URL for the operator to withdraw USDC from this wallet. " +
       "Returns a short-lived link that expires in 1 hour. Share with the operator - they open it in a browser to pull funds out.",
-    inputSchema: {
-      type: "object",
-      properties: {},
-    },
+    inputSchema: zodToMcpSchema(EmptyArgs),
   },
   handler: async (_args, wallet) => {
     const link = await wallet.createWithdrawLink();

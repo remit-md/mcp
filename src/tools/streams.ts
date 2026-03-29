@@ -1,5 +1,6 @@
 import type { Tool } from "../types.js";
 import { parseInput, OpenStreamArgs, CloseStreamArgs } from "./validate.js";
+import { zodToMcpSchema } from "./schema.js";
 import { autoPermitFor } from "./permit-helper.js";
 
 export const openStreamTool: Tool = {
@@ -7,19 +8,7 @@ export const openStreamTool: Tool = {
     name: "open_stream",
     description:
       "Start a continuous streaming payment to another wallet. Funds flow in real-time, second by second. Use for ongoing services, rent, or time-based work.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        to: { type: "string", description: "Recipient wallet address (0x...)" },
-        rate: { type: "number", description: "Payment rate in USD per second (e.g. 0.001)" },
-        max_duration: {
-          type: "number",
-          description: "Maximum duration in seconds (default: 3600 = 1 hour)",
-        },
-        max_total: { type: "number", description: "Optional maximum total spend in USD" },
-      },
-      required: ["to", "rate"],
-    },
+    inputSchema: zodToMcpSchema(OpenStreamArgs),
   },
   handler: async (args, wallet) => {
     const { to, rate, max_duration, max_total } = parseInput(OpenStreamArgs, args);
@@ -39,13 +28,7 @@ export const closeStreamTool: Tool = {
   definition: {
     name: "close_stream",
     description: "Stop a streaming payment and settle the final amount.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        stream_id: { type: "string", description: "Stream ID to close" },
-      },
-      required: ["stream_id"],
-    },
+    inputSchema: zodToMcpSchema(CloseStreamArgs),
   },
   handler: async (args, wallet) => {
     const { stream_id } = parseInput(CloseStreamArgs, args);

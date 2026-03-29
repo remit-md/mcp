@@ -20,6 +20,10 @@ import {
   PostBountyArgs,
   AwardBountyArgs,
   PlaceDepositArgs,
+  RegisterWebhookArgs,
+  DeleteWebhookArgs,
+  X402PayArgs,
+  X402ConfigArgs,
 } from "../src/tools/validate.js";
 
 const ADDR = "0xaaaa000000000000000000000000000000000001";
@@ -220,6 +224,138 @@ describe("PlaceDepositArgs", () => {
 
   it("rejects non-integer expires", () => {
     expectInvalidParams(() => parseInput(PlaceDepositArgs, { to: ADDR, amount: 50, expires: 3600.5 }), "expires");
+  });
+});
+
+// ── RegisterWebhookArgs ─────────────────────────────────────────────────────
+
+describe("RegisterWebhookArgs", () => {
+  it("accepts valid args", () => {
+    const result = parseInput(RegisterWebhookArgs, {
+      url: "https://example.com/webhook",
+      events: ["payment.sent", "escrow.funded"],
+    });
+    assert.equal(result.url, "https://example.com/webhook");
+    assert.deepEqual(result.events, ["payment.sent", "escrow.funded"]);
+  });
+
+  it("accepts optional chains", () => {
+    const result = parseInput(RegisterWebhookArgs, {
+      url: "https://example.com/webhook",
+      events: ["payment.sent"],
+      chains: ["base"],
+    });
+    assert.deepEqual(result.chains, ["base"]);
+  });
+
+  it("rejects HTTP URL (requires HTTPS)", () => {
+    expectInvalidParams(
+      () => parseInput(RegisterWebhookArgs, { url: "http://example.com/webhook", events: ["payment.sent"] }),
+      "url",
+    );
+  });
+
+  it("rejects non-URL string", () => {
+    expectInvalidParams(
+      () => parseInput(RegisterWebhookArgs, { url: "not-a-url", events: ["payment.sent"] }),
+      "url",
+    );
+  });
+
+  it("rejects empty events array", () => {
+    expectInvalidParams(
+      () => parseInput(RegisterWebhookArgs, { url: "https://example.com/webhook", events: [] }),
+      "events",
+    );
+  });
+
+  it("rejects invalid event type", () => {
+    expectInvalidParams(
+      () => parseInput(RegisterWebhookArgs, { url: "https://example.com/webhook", events: ["invalid.event"] }),
+      "events",
+    );
+  });
+
+  it("rejects missing url", () => {
+    expectInvalidParams(
+      () => parseInput(RegisterWebhookArgs, { events: ["payment.sent"] }),
+      "url",
+    );
+  });
+
+  it("rejects missing events", () => {
+    expectInvalidParams(
+      () => parseInput(RegisterWebhookArgs, { url: "https://example.com/webhook" }),
+      "events",
+    );
+  });
+});
+
+// ── DeleteWebhookArgs ───────────────────────────────────────────────────────
+
+describe("DeleteWebhookArgs", () => {
+  it("accepts valid id", () => {
+    const result = parseInput(DeleteWebhookArgs, { id: "wh-123" });
+    assert.equal(result.id, "wh-123");
+  });
+
+  it("rejects empty id", () => {
+    expectInvalidParams(() => parseInput(DeleteWebhookArgs, { id: "" }), "id");
+  });
+
+  it("rejects missing id", () => {
+    expectInvalidParams(() => parseInput(DeleteWebhookArgs, {}), "id");
+  });
+});
+
+// ── X402PayArgs ─────────────────────────────────────────────────────────────
+
+describe("X402PayArgs", () => {
+  it("accepts valid HTTPS URL", () => {
+    const result = parseInput(X402PayArgs, { url: "https://example.com/resource" });
+    assert.equal(result.url, "https://example.com/resource");
+  });
+
+  it("accepts optional max_usdc", () => {
+    const result = parseInput(X402PayArgs, { url: "https://example.com/resource", max_usdc: 0.5 });
+    assert.equal(result.max_usdc, 0.5);
+  });
+
+  it("rejects HTTP URL", () => {
+    expectInvalidParams(
+      () => parseInput(X402PayArgs, { url: "http://example.com/resource" }),
+      "url",
+    );
+  });
+
+  it("rejects non-URL string", () => {
+    expectInvalidParams(
+      () => parseInput(X402PayArgs, { url: "not-a-url" }),
+      "url",
+    );
+  });
+});
+
+// ── X402ConfigArgs ──────────────────────────────────────────────────────────
+
+describe("X402ConfigArgs", () => {
+  it("accepts valid args", () => {
+    const result = parseInput(X402ConfigArgs, { max_auto_pay_usdc: 0.5, enabled: true });
+    assert.equal(result.max_auto_pay_usdc, 0.5);
+    assert.equal(result.enabled, true);
+  });
+
+  it("accepts empty args (all optional)", () => {
+    const result = parseInput(X402ConfigArgs, {});
+    assert.equal(result.max_auto_pay_usdc, undefined);
+    assert.equal(result.enabled, undefined);
+  });
+
+  it("rejects negative max_auto_pay_usdc", () => {
+    expectInvalidParams(
+      () => parseInput(X402ConfigArgs, { max_auto_pay_usdc: -1 }),
+      "max_auto_pay_usdc",
+    );
   });
 });
 

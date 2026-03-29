@@ -1,14 +1,12 @@
 import type { Tool } from "../types.js";
+import { zodToMcpSchema } from "./schema.js";
+import { EmptyArgs } from "./validate.js";
 
 export const checkBalanceTool: Tool = {
   definition: {
     name: "check_balance",
     description: "Check your current USDC wallet balance.",
-    inputSchema: {
-      type: "object",
-      properties: {},
-      required: [],
-    },
+    inputSchema: zodToMcpSchema(EmptyArgs),
   },
   handler: async (_args, wallet) => {
     const bal = await wallet.balance();
@@ -21,11 +19,7 @@ export const getStatusTool: Tool = {
     name: "get_status",
     description:
       "Get your wallet status: balance, reputation tier, active escrows, open tabs, and streams.",
-    inputSchema: {
-      type: "object",
-      properties: {},
-      required: [],
-    },
+    inputSchema: zodToMcpSchema(EmptyArgs),
   },
   handler: async (_args, wallet) => {
     const s = await wallet.status();

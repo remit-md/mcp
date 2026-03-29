@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import {
   CallToolRequestSchema,
@@ -9,12 +12,14 @@ import {
   McpError,
   ErrorCode,
 } from "@modelcontextprotocol/sdk/types.js";
-import { ALL_TOOLS, callTool } from "./tools/index.js";
+import { buildTools, buildToolRegistry, callTool } from "./tools/index.js";
 import { listResources, readResource } from "./resources/index.js";
 import { listPrompts, getPrompt } from "./prompts/index.js";
 import type { WalletLike } from "./types.js";
 
-const SERVER_INFO = { name: "@remitmd/mcp-server", version: "0.1.0" };
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(resolve(__dirname, "..", "package.json"), "utf-8")) as { version: string };
+const SERVER_INFO = { name: "@remitmd/mcp-server", version: pkg.version };
 
 /**
  * Create and configure the MCP server with all tools, resources, and prompts.
@@ -25,16 +30,21 @@ export function createServer(wallet: WalletLike): Server {
     capabilities: { tools: {}, resources: {}, prompts: {} },
   });
 
+  // Per-instance x402 config (captured in closure, not a module-level singleton)
+  const x402Config = { maxAutoPayUsdc: 0.10, enabled: false };
+  const tools = buildTools(x402Config);
+  const registry = buildToolRegistry(tools);
+
   // ─── Tools ─────────────────────────────────────────────────────────────────
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: ALL_TOOLS.map((t) => t.definition),
+    tools: tools.map((t) => t.definition),
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args = {} } = request.params;
     try {
-      const result = await callTool(name, args as Record<string, unknown>, wallet);
+      const result = await callTool(name, args as Record<string, unknown>, wallet, registry);
       return { content: [{ type: "text" as const, text: JSON.stringify(result) }] };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

@@ -146,7 +146,9 @@ export interface WalletLike {
   getInvoice(invoiceId: string): Promise<Invoice>;
   getEscrow(invoiceId: string): Promise<Escrow>;
   getTab(tabId: string): Promise<Tab>;
+  getStream(streamId: string): Promise<Stream>;
   getBounty(bountyId: string): Promise<Bounty>;
+  getDeposit(depositId: string): Promise<Deposit>;
   getReputation(wallet: string): Promise<Reputation>;
   registerWebhook(url: string, events: string[], chains?: string[]): Promise<Webhook>;
   listWebhooks(): Promise<Webhook[]>;
@@ -177,7 +179,9 @@ const WALLET_LIKE_METHODS: ReadonlyArray<keyof WalletLike> = [
   "getInvoice",
   "getEscrow",
   "getTab",
+  "getStream",
   "getBounty",
+  "getDeposit",
   "getReputation",
   "registerWebhook",
   "listWebhooks",
@@ -197,23 +201,27 @@ export function isWalletLike(value: unknown): value is WalletLike {
 
 // ─── Tool Infrastructure ──────────────────────────────────────────────────────
 
+/** JSON Schema property — intentionally permissive to support zod-to-json-schema output. */
 export interface JsonSchemaProperty {
-  type: string;
+  type?: string;
   description?: string;
   enum?: string[];
+  pattern?: string;
+  minimum?: number;
+  exclusiveMinimum?: number;
+  minLength?: number;
+  minItems?: number;
   properties?: Record<string, JsonSchemaProperty>;
   required?: string[];
-  items?: {
-    type: string;
-    properties?: Record<string, JsonSchemaProperty>;
-    required?: string[];
-  };
+  items?: JsonSchemaProperty;
+  [key: string]: unknown;
 }
 
 export interface ToolInputSchema {
   type: "object";
   properties: Record<string, JsonSchemaProperty>;
   required?: string[];
+  [key: string]: unknown;
 }
 
 export interface ToolDefinition {

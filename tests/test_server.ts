@@ -1,18 +1,7 @@
 // Protocol-level tests for the MCP server.
 //
 // These tests use the MCP SDK's InMemoryTransport + Client to exercise the
-// server via the actual JSON-RPC protocol layer - not just by calling handler
-// functions directly.  This verifies:
-//   1. tools/list returns all 12 registered tools
-//   2. tools/call happy-path returns text content with the tool result
-//   3. tools/call for an unknown tool name propagates as a protocol error
-//   4. resources/list returns at least one resource
-//   5. prompts/list returns at least one prompt
-//   6. tools/call with a missing required arg propagates an error
-//   7. Concurrent tool calls are isolated (no state cross-contamination)
-//
-// Run with:
-//   npm test
+// server via the actual JSON-RPC protocol layer.
 
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert/strict";
@@ -21,66 +10,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 
 import { createServer } from "../src/server.js";
-import type {
-  WalletLike,
-  Transaction,
-  WalletStatus,
-  Tab,
-  Stream,
-  Bounty,
-  Deposit,
-  Invoice,
-  Escrow,
-  Reputation,
-  Webhook,
-} from "../src/types.js";
-
-// ── Mock wallet ───────────────────────────────────────────────────────────────
-
-const ADDR = "0xaaaa000000000000000000000000000000000001";
-const OTHER = "0xbbbb000000000000000000000000000000000002";
-const TX: Transaction = { txHash: "0xdeadbeef", chain: "base", status: "confirmed", createdAt: 1_000_000 };
-
-function makeMockWallet(): WalletLike {
-  return {
-    address: ADDR,
-    payDirect: async () => TX,
-    pay: async () =>
-      ({ invoiceId: "inv-1", txHash: "0xdeadbeef", payer: ADDR, payee: OTHER, amount: 100, chain: "base", status: "funded", createdAt: 1_000_000 } as Escrow),
-    claimStart: async () => TX,
-    releaseEscrow: async () => TX,
-    cancelEscrow: async () => TX,
-    openTab: async () =>
-      ({ id: "tab-1", payer: ADDR, payee: OTHER, limit: 100, perUnit: 1, spent: 0, chain: "base", status: "open", createdAt: 1_000_000, expiresAt: 9_999_999 } as Tab),
-    closeTab: async () => TX,
-    openStream: async () =>
-      ({ id: "stream-1", payer: ADDR, payee: OTHER, ratePerSecond: 0.001, maxDuration: 3600, totalStreamed: 0, chain: "base", status: "active", startedAt: 1_000_000 } as Stream),
-    closeStream: async () => TX,
-    postBounty: async () =>
-      ({ id: "bounty-1", poster: ADDR, task: "test task", amount: 50, chain: "base", status: "open", validation: "poster", maxAttempts: 10, submissions: [], deadline: 9_999_999, createdAt: 1_000_000 } as Bounty),
-    awardBounty: async () => TX,
-    placeDeposit: async () =>
-      ({ id: "dep-1", payer: ADDR, payee: OTHER, amount: 25, chain: "base", status: "locked", createdAt: 1_000_000, expiresAt: 9_999_999 } as Deposit),
-    balance: async () => 500,
-    status: async () =>
-      ({ wallet: ADDR, balance: "500.00", tier: "standard", monthlyVolume: "1000.00", feeRateBps: 100, activeEscrows: 0, activeTabs: 0, activeStreams: 0, permitNonce: null } as WalletStatus),
-    getStatus: async () =>
-      ({ wallet: OTHER, balance: "100.00", tier: "standard", monthlyVolume: "200.00", feeRateBps: 100, activeEscrows: 0, activeTabs: 0, activeStreams: 0, permitNonce: null } as WalletStatus),
-    getInvoice: async () => ({ id: "inv-1", from: ADDR, to: OTHER, amount: 10, chain: "base", status: "pending", paymentType: "escrow", createdAt: 1_000_000 } as Invoice),
-    getEscrow: async () => ({ invoiceId: "inv-1", payer: ADDR, payee: OTHER, amount: 10, chain: "base", status: "funded", createdAt: 1_000_000 } as Escrow),
-    getTab: async () => ({ id: "tab-1", payer: ADDR, payee: OTHER, limit: 100, perUnit: 1, spent: 0, chain: "base", status: "open", createdAt: 1_000_000, expiresAt: 9_999_999 } as Tab),
-    getBounty: async () => ({ id: "bounty-1", poster: ADDR, task: "test", amount: 50, chain: "base", status: "open", validation: "poster", maxAttempts: 10, submissions: [], deadline: 9_999_999, createdAt: 1_000_000 } as Bounty),
-    getReputation: async () => ({ address: OTHER, score: 90, totalPaid: 5000, totalReceived: 3000, escrowsCompleted: 10, memberSince: 1_000_000 } as Reputation),
-    x402Fetch: async () => ({ response: new Response('OK', { status: 200 }), lastPayment: null }),
-    createFundLink: async () => ({ url: "https://remit.md/fund/tok", token: "tok", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
-    createWithdrawLink: async () => ({ url: "https://remit.md/withdraw/tok", token: "tok", expiresAt: "2099-01-01T00:00:00Z", walletAddress: ADDR }),
-    registerWebhook: async (url, events, chains) => ({
-      id: "wh-1", wallet: ADDR, url, events, chains: chains ?? [], active: true, createdAt: 1_000_000,
-    } as Webhook),
-    listWebhooks: async () => [] as Webhook[],
-    deleteWebhook: async () => {},
-  };
-}
+import { createMockWallet, OTHER } from "./fixtures.js";
+import type { WalletLike } from "../src/types.js";
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -117,7 +48,7 @@ describe("MCP server - protocol level", () => {
   let clientTransport: InMemoryTransport;
 
   before(async () => {
-    const wallet = makeMockWallet();
+    const wallet = createMockWallet();
     const server = createServer(wallet as WalletLike);
 
     [serverTransport, clientTransport] = InMemoryTransport.createLinkedPair();
@@ -164,7 +95,7 @@ describe("MCP server - protocol level", () => {
     const [first] = result.content as Array<{ type: string; text: string }>;
     assert.equal(first.type, "text", "Content item type must be 'text'");
     const parsed = JSON.parse(first.text) as Record<string, unknown>;
-    assert.equal(parsed["txHash"], "0xdeadbeef", "txHash must be present in result");
+    assert.equal(parsed["txHash"], "0x1234", "txHash must be present in result");
     assert.equal(parsed["success"], true, "success must be true");
   });
 
@@ -196,8 +127,6 @@ describe("MCP server - protocol level", () => {
   });
 
   it("tools/call unknown tool throws McpError (protocol-level error)", async () => {
-    // The server throws McpError(InternalError) for unknown tools.
-    // The Client propagates this as a thrown McpError, not isError=true.
     await assert.rejects(
       () => client.callTool({ name: "does_not_exist", arguments: {} }),
       (err: unknown) => {
@@ -251,7 +180,7 @@ describe("MCP server - protocol level", () => {
 
     const [first1] = r1.content as Array<{ type: string; text: string }>;
     const p1 = JSON.parse(first1.text) as Record<string, unknown>;
-    assert.equal(p1["txHash"], "0xdeadbeef", "pay_direct result must contain txHash");
+    assert.equal(p1["txHash"], "0x1234", "pay_direct result must contain txHash");
 
     const [first2] = r2.content as Array<{ type: string; text: string }>;
     const p2 = JSON.parse(first2.text) as Record<string, unknown>;
