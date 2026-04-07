@@ -1,7 +1,7 @@
 {
   "name": "@remitmd/mcp-server",
   "version": "0.3.0",
-  "description": "MCP server for remit.md - enables any MCP-compatible AI agent to make and receive payments",
+  "description": "DEPRECATED: Use pay CLI instead. See https://pay-skill.com/docs/cli",
   "type": "module",
   "bin": {
     "remitmd-mcp": "./dist/index.js"
